@@ -1,0 +1,36 @@
+{
+    "type": "Type1",
+    "groupname": "A",
+    "turn": 1,
+    "batch": "1",
+    "registerdate": "2023-10-01",
+    "registerprice": 2000010000,
+    "checklist": "Checklist Item",
+    "contract": true,
+    "agreement": true,
+    "customerData": {
+        "name": "홍길s동",
+        "resnumfront": 123456,
+        "resnumback": 1234567,
+        "phone": "01012345678"
+    },
+    "legalAddress": {
+        "postnumber": 12345,
+        "province": "서울특별시",
+        "county": "강남구",
+        "detailaddress": "테헤란로 1"
+    },
+    "financial": {
+        "bankname": "국민은행",
+        "accountnum": 12345678901234,
+        "accountholder": "홍길동",
+        "trustcompany": "신탁사 이름"
+    },
+    "responsible": {
+        "generalmanagement": "총괄매니저",
+        "division": 1,
+        "team": 2,
+        "managername": "매니저 이름",
+        "registerroot": "온라인"
+    }
+}

@@ -6,8 +6,8 @@ import lombok.Data;
 @Embeddable
 @Data
 public class CustomerData {
-    private String name;
-    private Integer resnumfront;
-    private Integer resnumback;
-    private String phone;
+    private String name; //성명
+    private Integer resnumfront; //주민번호 앞자리
+    private Integer resnumback; //주민번호 뒷자리
+    private String phone; //휴대전화
 }

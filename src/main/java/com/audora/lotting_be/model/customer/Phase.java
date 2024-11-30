@@ -13,17 +13,17 @@ public class Phase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer phaseNumber;
-    private LocalDate planneddate;
-    private LocalDate fullpaiddate;
-    private Long charge;
-    private Long discount;
-    private Long exemption;
-    private Long service;
-    private String move;
-    private Long feesum;
-    private Long charged;
-    private Long sum;
+    private Integer phaseNumber; //차수
+    private LocalDate planneddate; //예정일자
+    private LocalDate fullpaiddate; //완납일자
+    private Long charge; //부담금
+    private Long discount; //할인액
+    private Long exemption; //면제금액
+    private Long service; //업무대행비
+    private String move; //이동
+    private Long feesum; //n차합
+    private Long charged; //낸 금액
+    private Long sum; //남은금액
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

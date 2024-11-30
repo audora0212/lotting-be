@@ -12,13 +12,13 @@ public class Loan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate loandate;
-    private String loanbank;
-    private Long loanammount;
-    private LocalDate selfdate;
-    private Long selfammount;
-    private Long loanselfsum;
-    private Long loanselfcurrent;
+    private LocalDate loandate; //대출일자
+    private String loanbank; //은행
+    private Long loanammount; //대출액
+    private LocalDate selfdate; //자납일
+    private Long selfammount; //자납액
+    private Long loanselfsum; //합계
+    private Long loanselfcurrent; //잔액
 
     @OneToOne
     @JoinColumn(name = "customer_id")

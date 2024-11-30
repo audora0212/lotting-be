@@ -11,12 +11,12 @@ public class Status {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long exemptionsum;
-    private Long unpaidammout;
-    private String unpaidphase;
-    private Long prepaidammount;
-    private Long ammountsum;
-    private Long percent40;
+    private Long exemptionsum; //총면제금액
+    private Long unpaidammout; //미납금액
+    private String unpaidphase; //미납차순 (1,2,3,...)
+    private Long prepaidammount; //기납부금액
+    private Long ammountsum; //1~n차 납입총액
+    private Long percent40; //40%
 
     @OneToOne
     @JoinColumn(name = "customer_id")

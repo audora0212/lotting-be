@@ -12,8 +12,8 @@ public class Deposit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate depositdate;
-    private Long depositammount;
+    private LocalDate depositdate; //납입일자
+    private Long depositammount; //금액
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

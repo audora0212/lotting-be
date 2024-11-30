@@ -11,9 +11,9 @@ public class FeePerPhase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer phaseNumber;
-    private Long phasefee;
-    private String phasedate;
+    private Integer phaseNumber; //n차
+    private Long phasefee; //금액
+    private String phasedate; //제출일
 
     @ManyToOne
     @JoinColumn(name = "fee_id")

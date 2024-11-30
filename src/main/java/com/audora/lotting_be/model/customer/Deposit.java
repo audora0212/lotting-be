@@ -5,13 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 
-@Entity
+@Embeddable
 @Data
 public class Deposit {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     private LocalDate depositdate; //납입일자
     private Long depositammount; //금액
 

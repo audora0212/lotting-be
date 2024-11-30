@@ -33,7 +33,7 @@ public class Customer {
     @Embedded
     private Financial financial; //금융기관
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @Embedded
     private List<Deposit> deposits; //예약금
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)

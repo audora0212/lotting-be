@@ -36,6 +36,9 @@ public class Customer {
     @Embedded
     private Deposit deposits; //예약금
 
+    @Embedded
+    private Attachments attachments; //제출서류
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Phase> phases; //n차

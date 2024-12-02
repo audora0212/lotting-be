@@ -34,7 +34,7 @@ public class Customer {
     private Financial financial; //금융기관
 
     @Embedded
-    private List<Deposit> deposits; //예약금
+    private Deposit deposits; //예약금
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference

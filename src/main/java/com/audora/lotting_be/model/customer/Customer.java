@@ -43,7 +43,7 @@ public class Customer {
     @JsonManagedReference
     private List<Phase> phases; //n차
 
-    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @Embedded
     private Loan loan; //대출,자납
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)

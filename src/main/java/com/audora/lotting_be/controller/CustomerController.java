@@ -55,4 +55,20 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Customer>> searchCustomers(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String number) {
+
+        List<Customer> customers = customerService.searchCustomers(name, number);
+        return ResponseEntity.ok(customers);
+    }
+
+    // 고객 삭제 엔드포인트
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Integer id) {
+        customerService.deleteCustomer(id);
+        return ResponseEntity.noContent().build();
+    }
 }

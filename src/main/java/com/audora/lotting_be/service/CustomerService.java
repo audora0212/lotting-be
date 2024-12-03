@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,5 +77,23 @@ public class CustomerService {
         } else {
             return registerDate;
         }
+    }
+
+    public List<Customer> searchCustomers(String name, String number) {
+        if (name != null && number != null) {
+            return customerRepository.findByCustomerDataNameAndId(name, Integer.parseInt(number));
+        } else if (name != null) {
+            return customerRepository.findByCustomerDataNameContaining(name);
+        } else if (number != null) {
+            return customerRepository.findById(Integer.parseInt(number))
+                    .map(Collections::singletonList)
+                    .orElse(Collections.emptyList());
+        } else {
+            return customerRepository.findAll();
+        }
+    }
+
+    public void deleteCustomer(Integer id) {
+        customerRepository.deleteById(id);
     }
 }

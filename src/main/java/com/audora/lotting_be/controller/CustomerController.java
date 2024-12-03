@@ -71,4 +71,26 @@ public class CustomerController {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
     }
+
+    //납입금 관리 페이지 미납차수
+    @GetMapping("/{customerId}/pending-phases")
+    public ResponseEntity<List<Phase>> getPendingPhases(@PathVariable Integer customerId) {
+        List<Phase> pendingPhases = customerService.getPendingPhases(customerId);
+        if (pendingPhases != null) {
+            return ResponseEntity.ok(pendingPhases);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    //납입금 관리 페이지 완납차수
+    @GetMapping("/{customerId}/completed-phases")
+    public ResponseEntity<List<Phase>> getCompletedPhases(@PathVariable Integer customerId) {
+        List<Phase> completedPhases = customerService.getCompletedPhases(customerId);
+        if (completedPhases != null) {
+            return ResponseEntity.ok(completedPhases);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

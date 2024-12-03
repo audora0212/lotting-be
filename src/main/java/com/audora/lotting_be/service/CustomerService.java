@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -95,5 +96,35 @@ public class CustomerService {
 
     public void deleteCustomer(Integer id) {
         customerRepository.deleteById(id);
+    }
+
+    public List<Phase> getPendingPhases(Integer customerId) {
+        Optional<Customer> customerOptional = customerRepository.findById(customerId);
+        if (customerOptional.isPresent()) {
+            Customer customer = customerOptional.get();
+            List<Phase> phases = customer.getPhases();
+            // sum 필드가 0이 아닌 Phase들만 필터링
+            List<Phase> pendingPhases = phases.stream()
+                    .filter(phase -> phase.getSum() != null && phase.getSum() > 0)
+                    .collect(Collectors.toList());
+            return pendingPhases;
+        } else {
+            return null;
+        }
+    }
+
+    public List<Phase> getCompletedPhases(Integer customerId) {
+        Optional<Customer> customerOptional = customerRepository.findById(customerId);
+        if (customerOptional.isPresent()) {
+            Customer customer = customerOptional.get();
+            List<Phase> phases = customer.getPhases();
+            // sum 필드가 0인 Phase들만 필터링 (완납된 Phase)
+            List<Phase> completedPhases = phases.stream()
+                    .filter(phase -> phase.getSum() == null || phase.getSum() == 0)
+                    .collect(Collectors.toList());
+            return completedPhases;
+        } else {
+            return null;
+        }
     }
 }

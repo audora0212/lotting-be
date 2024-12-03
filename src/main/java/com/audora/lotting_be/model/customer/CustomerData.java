@@ -10,4 +10,5 @@ public class CustomerData {
     private Integer resnumfront; //주민번호 앞자리
     private Integer resnumback; //주민번호 뒷자리
     private String phone; //휴대전화
+    private String email; // E-mail
 }

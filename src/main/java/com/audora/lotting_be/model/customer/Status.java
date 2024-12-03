@@ -1,6 +1,7 @@
 // Status.java
 package com.audora.lotting_be.model.customer;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,5 +21,6 @@ public class Status {
 
     @OneToOne
     @JoinColumn(name = "customer_id")
+    @JsonBackReference
     private Customer customer;
 }

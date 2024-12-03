@@ -20,15 +20,15 @@ public class Customer {
     private String batch; //가입차순
     private LocalDate registerdate; //가입일자
     private Long registerprice; //가입가
-    private String checklist; //체크리스트
-    private Boolean contract; //지산 A동 계약서
-    private Boolean agreement; //동의서
 
     @Embedded
     private CustomerData customerData; //가입자
 
     @Embedded
     private LegalAddress legalAddress; //법정주소
+
+    @Embedded
+    private Postreceive postreceive; //우편물 수령주소
 
     @Embedded
     private Financial financial; //금융기관
@@ -39,16 +39,19 @@ public class Customer {
     @Embedded
     private Attachments attachments; //제출서류
 
+    @Embedded
+    private Loan loan; //대출,자납
+
+    @Embedded
+    private Responsible responsible;
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Phase> phases; //n차
 
-    @Embedded
-    private Loan loan; //대출,자납
-
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Status status; //현 상태
 
-    @Embedded
-    private Responsible responsible;
+
 }

@@ -6,6 +6,7 @@ import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.Fee.Fee;
 import com.audora.lotting_be.model.Fee.FeePerPhase;
 import com.audora.lotting_be.model.customer.Phase;
+import com.audora.lotting_be.model.customer.Status;
 import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.FeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +49,17 @@ public class CustomerService {
             }
             customer.setPhases(phases);
         }
+
+        // Status 객체가 null인 경우 새로운 Status 객체 생성
+        if (customer.getStatus() == null) {
+            Status status = new Status();
+            status.setCustomer(customer); // 양방향 관계 설정
+            customer.setStatus(status);
+        }
+
         return customerRepository.save(customer);
     }
+
 
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
         if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {

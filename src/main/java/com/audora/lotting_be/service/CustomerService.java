@@ -28,8 +28,12 @@ public class CustomerService {
         return optionalCustomer.orElse(null);
     }
     public Customer createCustomer(Customer customer) {
-        Fee fee = feeRepository.findByTypeAndGroupnameAndBatch(
-                customer.getType(), customer.getGroupname(), customer.getBatch());
+
+        System.out.println("asd");
+        System.out.println(customer.getType());
+        System.out.println(customer.getBatch());
+        Fee fee = feeRepository.findByGroupnameAndBatch(
+                customer.getType(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군 유저테이블 batch = 차수
 
         if (fee != null) {
             List<FeePerPhase> feePerPhases = fee.getFeePerPhases();

@@ -1,6 +1,7 @@
 // FeePerPhase.java
 package com.audora.lotting_be.model.Fee;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class FeePerPhase {
     private String phasedate; //제출일
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "fee_id")
     private Fee fee;
 }

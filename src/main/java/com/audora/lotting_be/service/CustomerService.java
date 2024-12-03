@@ -1,7 +1,6 @@
 // CustomerService.java
 package com.audora.lotting_be.service;
 
-
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.Fee.Fee;
 import com.audora.lotting_be.model.Fee.FeePerPhase;
@@ -23,17 +22,20 @@ public class CustomerService {
 
     @Autowired
     private FeeRepository feeRepository;
+
+    public Integer getNextCustomerId() {
+        return customerRepository.getNextId();
+    }
+
     public Customer getCustomerById(Integer id) {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         return optionalCustomer.orElse(null);
     }
+
     public Customer createCustomer(Customer customer) {
 
-        System.out.println("asd");
-        System.out.println(customer.getType());
-        System.out.println(customer.getBatch());
         Fee fee = feeRepository.findByGroupnameAndBatch(
-                customer.getType(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군 유저테이블 batch = 차수
+                customer.getType(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군, 유저테이블 batch = 차수
 
         if (fee != null) {
             List<FeePerPhase> feePerPhases = fee.getFeePerPhases();
@@ -63,7 +65,6 @@ public class CustomerService {
 
         return customerRepository.save(customer);
     }
-
 
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
         if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {

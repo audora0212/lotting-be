@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class Financial {
     private String bankname; //은행명
-    private Long accountnum; //계좌번호
+    private String accountnum; //계좌번호
     private String accountholder; //예금주
     private String trustcompany; //신탁사
 }

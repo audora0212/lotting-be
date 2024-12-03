@@ -5,7 +5,5 @@ import com.audora.lotting_be.model.Fee.Fee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FeeRepository extends JpaRepository<Fee, Long> {
-    Fee findByTypeAndGroupnameAndBatch(String type, String group, String batch);
-
-    Fee findByGroupnameAndBatch(String type, String batch);
+    Fee findByGroupnameAndBatch(String groupname, String batch);
 }

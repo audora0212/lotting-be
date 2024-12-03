@@ -10,8 +10,10 @@ public class Attachments {
     private Boolean isuploaded; // 파일 제출했는지 여부
     private String fileinfo; // 파일 주소, 이름, 확장자
 
+    private Boolean exemption7; // 7차 면제
+    private Boolean investmentfile; //출자금
     private Boolean contract; //지산 A동 계약서
-    private Boolean agreement; //동의서
+    private Boolean agreement; //총회동의서
 
     private Boolean sealcertificateprovided; // 인감증명서 제출 여부
     private Boolean selfsignatureconfirmationprovided; // 본인서명확인서 제출 여부

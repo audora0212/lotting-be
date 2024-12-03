@@ -1,3 +1,4 @@
+// CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/customers")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CustomerController {
 
     @Autowired
@@ -19,14 +21,20 @@ public class CustomerController {
     @Autowired
     private PhaseService phaseService;
 
-    // 기존의 고객 생성 엔드포인트
+    @GetMapping("/nextId")
+    public ResponseEntity<Integer> getNextCustomerId() {
+        Integer nextId = customerService.getNextCustomerId();
+        return ResponseEntity.ok(nextId);
+    }
+
+    // 고객 생성 엔드포인트
     @PostMapping
     public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
         Customer createdCustomer = customerService.createCustomer(customer);
         return ResponseEntity.ok(createdCustomer);
     }
 
-    // 기존의 고객 조회 엔드포인트
+    // 고객 조회 엔드포인트
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Integer id) {
         Customer customer = customerService.getCustomerById(id);
@@ -37,7 +45,7 @@ public class CustomerController {
         }
     }
 
-    // 새로운 Phase 조회 엔드포인트
+    // Phase 조회 엔드포인트
     @GetMapping("/{id}/phases")
     public ResponseEntity<List<Phase>> getPhasesByCustomerId(@PathVariable Integer id) {
         List<Phase> phases = phaseService.getPhasesByCustomerId(id);

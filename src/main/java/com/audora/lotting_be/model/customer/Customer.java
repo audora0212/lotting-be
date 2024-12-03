@@ -17,7 +17,7 @@ public class Customer {
     private String customertype; //분류(회원)
     private String type; // 타입
     private String groupname; // 군
-    private Integer turn; // 순번
+    private String turn; // 순번
     private String batch; // 가입차순
     private LocalDate registerdate; // 가입일자
     private Long registerprice; // 가입가
@@ -25,7 +25,6 @@ public class Customer {
     private String registerpath; // 가입경로
     private String specialnote; // 특이사항
     private String prizewinning; // 경품당첨
-    private String investment; // 출자금
 
     @Embedded
     private CustomerData customerData = new CustomerData(); // 가입자

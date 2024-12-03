@@ -37,7 +37,7 @@ public class CustomerService {
     public Customer createCustomer(Customer customer) {
 
         Fee fee = feeRepository.findByGroupnameAndBatch(
-                customer.getType(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군, 유저테이블 batch = 차수
+                customer.getGroupname(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군, 유저테이블 batch = 차수
 
         if (fee != null) {
             List<FeePerPhase> feePerPhases = fee.getFeePerPhases();

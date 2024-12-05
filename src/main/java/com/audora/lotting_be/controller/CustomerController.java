@@ -148,9 +148,6 @@ public class CustomerController {
 
         return ResponseEntity.ok(new MessageResponse("Customer cancelled successfully."));
     }
-
-    // 고객 수정 엔드포인트
-    // 고객 수정 엔드포인트
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
         Customer existingCustomer = customerService.getCustomerById(id);
@@ -158,7 +155,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
 
-        // 기존 고객 정보에 업데이트된 정보 반영
+        // 필요한 필드들 업데이트
         existingCustomer.setCustomertype(updatedCustomer.getCustomertype());
         existingCustomer.setType(updatedCustomer.getType());
         existingCustomer.setGroupname(updatedCustomer.getGroupname());
@@ -167,28 +164,58 @@ public class CustomerController {
         existingCustomer.setRegisterdate(updatedCustomer.getRegisterdate());
         existingCustomer.setRegisterprice(updatedCustomer.getRegisterprice());
         existingCustomer.setAdditional(updatedCustomer.getAdditional());
+        existingCustomer.setRegisterpath(updatedCustomer.getRegisterpath());
         existingCustomer.setSpecialnote(updatedCustomer.getSpecialnote());
         existingCustomer.setPrizewinning(updatedCustomer.getPrizewinning());
 
-        // 임베디드 객체 업데이트
-        existingCustomer.setCustomerData(updatedCustomer.getCustomerData());
-        existingCustomer.setFinancial(updatedCustomer.getFinancial());
-        existingCustomer.setLegalAddress(updatedCustomer.getLegalAddress());
-        existingCustomer.setPostreceive(updatedCustomer.getPostreceive());
-        existingCustomer.setDeposits(updatedCustomer.getDeposits());
-        existingCustomer.setAttachments(updatedCustomer.getAttachments());
-        existingCustomer.setLoan(updatedCustomer.getLoan());
-        existingCustomer.setResponsible(updatedCustomer.getResponsible());
-        existingCustomer.setDahim(updatedCustomer.getDahim());
-        existingCustomer.setMgm(updatedCustomer.getMgm());
-        existingCustomer.setFirstemp(updatedCustomer.getFirstemp());
-        existingCustomer.setSecondemp(updatedCustomer.getSecondemp());
-        existingCustomer.setMeetingattend(updatedCustomer.getMeetingattend());
-        existingCustomer.setVotemachine(updatedCustomer.getVotemachine());
+        existingCustomer.getCustomerData().setName(updatedCustomer.getCustomerData().getName());
+        existingCustomer.getCustomerData().setPhone(updatedCustomer.getCustomerData().getPhone());
+        existingCustomer.getCustomerData().setResnumfront(updatedCustomer.getCustomerData().getResnumfront());
+        existingCustomer.getCustomerData().setResnumback(updatedCustomer.getCustomerData().getResnumback());
+        existingCustomer.getCustomerData().setEmail(updatedCustomer.getCustomerData().getEmail());
 
-        // Phases 및 Status 등 필요한 추가 업데이트 로직
+        existingCustomer.getLegalAddress().setDetailaddress(updatedCustomer.getLegalAddress().getDetailaddress());
+        existingCustomer.getPostreceive().setDetailaddressreceive(updatedCustomer.getPostreceive().getDetailaddressreceive());
 
-        Customer savedCustomer = customerService.saveCustomer(existingCustomer);
-        return ResponseEntity.ok(savedCustomer);
+        existingCustomer.getFinancial().setBankname(updatedCustomer.getFinancial().getBankname());
+        existingCustomer.getFinancial().setAccountnum(updatedCustomer.getFinancial().getAccountnum());
+        existingCustomer.getFinancial().setAccountholder(updatedCustomer.getFinancial().getAccountholder());
+
+        existingCustomer.getDeposits().setDepositdate(updatedCustomer.getDeposits().getDepositdate());
+        existingCustomer.getDeposits().setDepositammount(updatedCustomer.getDeposits().getDepositammount());
+
+        existingCustomer.getResponsible().setGeneralmanagement(updatedCustomer.getResponsible().getGeneralmanagement());
+        existingCustomer.getResponsible().setDivision(updatedCustomer.getResponsible().getDivision());
+        existingCustomer.getResponsible().setTeam(updatedCustomer.getResponsible().getTeam());
+        existingCustomer.getResponsible().setManagername(updatedCustomer.getResponsible().getManagername());
+
+        existingCustomer.getMgm().setMgmcompanyname(updatedCustomer.getMgm().getMgmcompanyname());
+        existingCustomer.getMgm().setMgmname(updatedCustomer.getMgm().getMgmname());
+        existingCustomer.getMgm().setMgminstitution(updatedCustomer.getMgm().getMgminstitution());
+        existingCustomer.getMgm().setMgmaccount(updatedCustomer.getMgm().getMgmaccount());
+
+        // Attachments 업데이트
+        existingCustomer.getAttachments().setIsuploaded(updatedCustomer.getAttachments().getIsuploaded());
+        existingCustomer.getAttachments().setSealcertificateprovided(updatedCustomer.getAttachments().getSealcertificateprovided());
+        existingCustomer.getAttachments().setSelfsignatureconfirmationprovided(updatedCustomer.getAttachments().getSelfsignatureconfirmationprovided());
+        existingCustomer.getAttachments().setCommitmentletterprovided(updatedCustomer.getAttachments().getCommitmentletterprovided());
+        existingCustomer.getAttachments().setIdcopyprovided(updatedCustomer.getAttachments().getIdcopyprovided());
+        existingCustomer.getAttachments().setFreeoption(updatedCustomer.getAttachments().getFreeoption());
+        existingCustomer.getAttachments().setForfounding(updatedCustomer.getAttachments().getForfounding());
+        existingCustomer.getAttachments().setAgreement(updatedCustomer.getAttachments().getAgreement());
+        existingCustomer.getAttachments().setPreferenceattachment(updatedCustomer.getAttachments().getPreferenceattachment());
+        existingCustomer.getAttachments().setPrizeattachment(updatedCustomer.getAttachments().getPrizeattachment());
+        existingCustomer.getAttachments().setExemption7(updatedCustomer.getAttachments().getExemption7());
+        existingCustomer.getAttachments().setInvestmentfile(updatedCustomer.getAttachments().getInvestmentfile());
+        existingCustomer.getAttachments().setContract(updatedCustomer.getAttachments().getContract());
+        existingCustomer.getAttachments().setFileinfo(updatedCustomer.getAttachments().getFileinfo());
+
+        // 기타 필요한 필드 업데이트
+
+        customerService.saveCustomer(existingCustomer);
+
+        return ResponseEntity.ok(existingCustomer);
     }
+
+
 }

@@ -15,6 +15,7 @@ public class Phase {
 
     private Integer phaseNumber; //차수
     private LocalDate planneddate; //예정일자
+    private String planneddateString; //원래 예정일자
     private LocalDate fullpaiddate; //완납일자
     private Long charge; //부담금
     private Long discount; //할인액

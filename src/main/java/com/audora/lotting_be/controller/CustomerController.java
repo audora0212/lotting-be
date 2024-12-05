@@ -35,6 +35,14 @@ public class CustomerController {
     // 고객 생성 엔드포인트
     @PostMapping
     public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+        // 추가: 수신된 전체 데이터 출력
+        System.out.println("Received Customer Data: " + customer);
+        if (customer.getDeposits() != null) {
+            System.out.println("Received Deposit Date: " + customer.getDeposits().getDepositdate());
+        } else {
+            System.out.println("Deposits is null");
+        }
+
         Customer createdCustomer = customerService.createCustomer(customer);
         return ResponseEntity.ok(createdCustomer);
     }

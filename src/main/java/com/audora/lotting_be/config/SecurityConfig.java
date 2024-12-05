@@ -78,7 +78,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 // 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // 인증 없이 접근 가능한 엔드포인트
+                        .requestMatchers("/api/auth/**", "/latefees/**").permitAll() // /latefees 엔드포인트 인증 제외
                         .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
                 )
                 // 세션 관리 설정 (JWT 사용을 위한 세션 비사용)

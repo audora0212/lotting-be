@@ -47,6 +47,18 @@ public class CustomerService {
                 phase.setPhaseNumber(feePerPhase.getPhaseNumber());
                 phase.setCharge(feePerPhase.getPhasefee());
 
+                // discount과 exemption이 null일 수 있으므로 안전하게 처리
+                Long discount = 0L;
+                Long exemption = 0L;
+                Long service = 0L;
+
+                // feesum 계산: charge - discount - exemption + service
+                Long feesum = feePerPhase.getPhasefee() - discount - exemption + service;
+                phase.setFeesum(feesum);
+
+                // sum을 charge로 초기화 (기존 로직 유지)
+                phase.setSum(feePerPhase.getPhasefee());
+
                 LocalDate plannedDate = calculatePlannedDate(
                         customer.getRegisterdate(), feePerPhase.getPhasedate());
                 phase.setPlanneddate(plannedDate);
@@ -64,6 +76,9 @@ public class CustomerService {
             customer.setStatus(status);
         }
 
+        // Phase 생성 후 Status 필드 업데이트
+        updateStatusFields(customer);
+
         return customerRepository.save(customer);
     }
 
@@ -77,6 +92,50 @@ public class CustomerService {
         } else {
             return registerDate;
         }
+    }
+
+    /**
+     * Status 객체의 필드를 업데이트하는 메서드
+     */
+    private void updateStatusFields(Customer customer) {
+        Status status = customer.getStatus();
+
+        // exemptionsum: 모든 Phase의 exemption 합
+        Long exemptionsum = customer.getPhases().stream()
+                .mapToLong(phase -> phase.getExemption() != null ? phase.getExemption() : 0L)
+                .sum();
+        status.setExemptionsum(exemptionsum);
+
+        // unpaidammout: 모든 Phase의 sum 합
+        Long unpaidammout = customer.getPhases().stream()
+                .mapToLong(phase -> phase.getSum() != null ? phase.getSum() : 0L)
+                .sum();
+        status.setUnpaidammout(unpaidammout);
+
+        // unpaidphase: 미납된 Phase의 phaseNumber들을 콤마로 구분하여 저장
+        List<Integer> unpaidPhaseNumbers = customer.getPhases().stream()
+                .filter(phase -> phase.getPlanneddate() != null
+                        && phase.getPlanneddate().isBefore(LocalDate.now())
+                        && phase.getFullpaiddate() == null)
+                .map(Phase::getPhaseNumber)
+                .sorted()
+                .collect(Collectors.toList());
+
+        String unpaidPhaseStr = unpaidPhaseNumbers.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        status.setUnpaidphase(unpaidPhaseStr);
+
+        // ammountsum: 모든 Phase의 feesum 합
+        Long ammountsum = customer.getPhases().stream()
+                .mapToLong(phase -> phase.getFeesum() != null ? phase.getFeesum() : 0L)
+                .sum();
+        status.setAmmountsum(ammountsum);
+
+        // 추가로 필요한 필드가 있다면 여기서 설정
+
+        // Status 객체 저장
+        customer.setStatus(status);
     }
 
     public List<Customer> searchCustomers(String name, String number) {

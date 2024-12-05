@@ -131,4 +131,21 @@ public class CustomerService {
     public Customer saveCustomer(Customer customer) {
         return customerRepository.save(customer);
     }
+
+    /**
+     * 고객 해약 처리
+     */
+    public boolean cancelCustomer(Integer id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
+        if (optionalCustomer.isPresent()) {
+            Customer customer = optionalCustomer.get();
+            customer.setCustomertype("c");
+            customerRepository.save(customer);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
 }

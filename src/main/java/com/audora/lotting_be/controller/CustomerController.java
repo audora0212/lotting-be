@@ -4,9 +4,11 @@ package com.audora.lotting_be.controller;
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Loan;
 import com.audora.lotting_be.model.customer.Phase;
+import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -58,6 +60,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
     }
+
     // 고객 검색 페이지
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> searchCustomers(
@@ -130,5 +133,62 @@ public class CustomerController {
         customerService.saveCustomer(customer);
 
         return ResponseEntity.ok(customer);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelCustomer(@PathVariable Integer id) {
+        Customer customer = customerService.getCustomerById(id);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("Error: Customer not found."));
+        }
+
+        customer.setCustomertype("x");
+        customerService.saveCustomer(customer);
+
+        return ResponseEntity.ok(new MessageResponse("Customer cancelled successfully."));
+    }
+
+    // 고객 수정 엔드포인트
+    // 고객 수정 엔드포인트
+    @PutMapping("/{id}")
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
+        Customer existingCustomer = customerService.getCustomerById(id);
+        if (existingCustomer == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 기존 고객 정보에 업데이트된 정보 반영
+        existingCustomer.setCustomertype(updatedCustomer.getCustomertype());
+        existingCustomer.setType(updatedCustomer.getType());
+        existingCustomer.setGroupname(updatedCustomer.getGroupname());
+        existingCustomer.setTurn(updatedCustomer.getTurn());
+        existingCustomer.setBatch(updatedCustomer.getBatch());
+        existingCustomer.setRegisterdate(updatedCustomer.getRegisterdate());
+        existingCustomer.setRegisterprice(updatedCustomer.getRegisterprice());
+        existingCustomer.setAdditional(updatedCustomer.getAdditional());
+        existingCustomer.setSpecialnote(updatedCustomer.getSpecialnote());
+        existingCustomer.setPrizewinning(updatedCustomer.getPrizewinning());
+
+        // 임베디드 객체 업데이트
+        existingCustomer.setCustomerData(updatedCustomer.getCustomerData());
+        existingCustomer.setFinancial(updatedCustomer.getFinancial());
+        existingCustomer.setLegalAddress(updatedCustomer.getLegalAddress());
+        existingCustomer.setPostreceive(updatedCustomer.getPostreceive());
+        existingCustomer.setDeposits(updatedCustomer.getDeposits());
+        existingCustomer.setAttachments(updatedCustomer.getAttachments());
+        existingCustomer.setLoan(updatedCustomer.getLoan());
+        existingCustomer.setResponsible(updatedCustomer.getResponsible());
+        existingCustomer.setDahim(updatedCustomer.getDahim());
+        existingCustomer.setMgm(updatedCustomer.getMgm());
+        existingCustomer.setFirstemp(updatedCustomer.getFirstemp());
+        existingCustomer.setSecondemp(updatedCustomer.getSecondemp());
+        existingCustomer.setMeetingattend(updatedCustomer.getMeetingattend());
+        existingCustomer.setVotemachine(updatedCustomer.getVotemachine());
+
+        // Phases 및 Status 등 필요한 추가 업데이트 로직
+
+        Customer savedCustomer = customerService.saveCustomer(existingCustomer);
+        return ResponseEntity.ok(savedCustomer);
     }
 }

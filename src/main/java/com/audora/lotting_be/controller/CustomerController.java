@@ -2,6 +2,7 @@
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
+import com.audora.lotting_be.model.customer.Loan;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/customers")
@@ -21,6 +23,7 @@ public class CustomerController {
     @Autowired
     private PhaseService phaseService;
 
+    // 고객 생성시 아이디 받아오기
     @GetMapping("/nextId")
     public ResponseEntity<Integer> getNextCustomerId() {
         Integer nextId = customerService.getNextCustomerId();
@@ -55,7 +58,7 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    // 고객 검색 페이지
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> searchCustomers(
             @RequestParam(required = false) String name,
@@ -92,5 +95,40 @@ public class CustomerController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/{id}/loan")
+    public ResponseEntity<Loan> getLoanByCustomerId(@PathVariable Integer id) {
+        Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomerById(id));
+        if (!optionalCustomer.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Loan loan = optionalCustomer.get().getLoan();
+        return ResponseEntity.ok(loan);
+    }
+
+    @PutMapping("/{id}/loan")
+    public ResponseEntity<Customer> updateLoanByCustomerId(@PathVariable Integer id, @RequestBody Loan updatedLoan) {
+        Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomerById(id));
+        if (!optionalCustomer.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Customer customer = optionalCustomer.get();
+        Loan loan = customer.getLoan();
+
+        // Loan 필드 업데이트
+        loan.setLoandate(updatedLoan.getLoandate());
+        loan.setLoanammount(updatedLoan.getLoanammount());
+        loan.setSelfdate(updatedLoan.getSelfdate());
+        loan.setSelfammount(updatedLoan.getSelfammount());
+        loan.setLoanselfsum(updatedLoan.getLoanselfsum());
+        loan.setLoanselfcurrent(updatedLoan.getLoanselfcurrent());
+
+        customer.setLoan(loan);
+        customerService.saveCustomer(customer);
+
+        return ResponseEntity.ok(customer);
     }
 }

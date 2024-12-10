@@ -72,23 +72,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CORS 설정 적용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // CSRF 비활성화 (테스트 시)
                 .csrf(csrf -> csrf.disable())
-                // 요청 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/latefees/**").permitAll() // /latefees 엔드포인트 인증 제외
-                        .anyRequest().authenticated() // 나머지 모든 요청은 인증 필요
+                        .anyRequest().permitAll() // 모든 요청에 대해 인증 없이 접근 허용
                 )
-                // 세션 관리 설정 (JWT 사용을 위한 세션 비사용)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 추가
+        // JWT 필터 추가 부분은 남겨두되, 현재는 인증을 요구하지 않으므로 실질적으로 효과가 없음
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

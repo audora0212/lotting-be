@@ -128,19 +128,27 @@ public class CustomerController {
         Customer customer = optionalCustomer.get();
         Loan loan = customer.getLoan();
 
+        // loan이 null이면 새로 생성해준다.
+        if (loan == null) {
+            loan = new Loan();
+        }
+
         // Loan 필드 업데이트
         loan.setLoandate(updatedLoan.getLoandate());
+        loan.setLoanbank(updatedLoan.getLoanbank());
         loan.setLoanammount(updatedLoan.getLoanammount());
         loan.setSelfdate(updatedLoan.getSelfdate());
         loan.setSelfammount(updatedLoan.getSelfammount());
         loan.setLoanselfsum(updatedLoan.getLoanselfsum());
         loan.setLoanselfcurrent(updatedLoan.getLoanselfcurrent());
 
+        // 변경된 loan을 customer에 다시 세팅
         customer.setLoan(loan);
         customerService.saveCustomer(customer);
 
         return ResponseEntity.ok(customer);
     }
+
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelCustomer(@PathVariable Integer id) {

@@ -7,7 +7,6 @@ import lombok.Data;
 @Data
 public class LegalAddress {
     private Integer postnumber; //우편번호
-    private String province; //도
-    private String county; //군
+    private String post; //도
     private String detailaddress; //상세주소
 }

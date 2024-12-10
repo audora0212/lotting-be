@@ -97,7 +97,7 @@ public class CustomerService {
     /**
      * Status 객체의 필드를 업데이트하는 메서드
      */
-    private void updateStatusFields(Customer customer) {
+    public void updateStatusFields(Customer customer) {
         Status status = customer.getStatus();
 
         // exemptionsum: 모든 Phase의 exemption 합
@@ -111,6 +111,8 @@ public class CustomerService {
                 .mapToLong(phase -> phase.getSum() != null ? phase.getSum() : 0L)
                 .sum();
         status.setUnpaidammout(unpaidammout);
+
+
 
         // unpaidphase: 미납된 Phase의 phaseNumber들을 콤마로 구분하여 저장
         List<Integer> unpaidPhaseNumbers = customer.getPhases().stream()
@@ -132,7 +134,6 @@ public class CustomerService {
                 .sum();
         status.setAmmountsum(ammountsum);
 
-        // 추가로 필요한 필드가 있다면 여기서 설정
 
         // Status 객체 저장
         customer.setStatus(status);

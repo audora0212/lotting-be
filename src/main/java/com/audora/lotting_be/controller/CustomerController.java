@@ -227,6 +227,7 @@ public class CustomerController {
 
         // 기타 필요한 필드 업데이트
 
+
         customerService.saveCustomer(existingCustomer);
 
         return ResponseEntity.ok(existingCustomer);

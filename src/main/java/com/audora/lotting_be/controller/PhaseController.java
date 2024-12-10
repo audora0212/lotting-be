@@ -1,7 +1,9 @@
 // PhaseController.java
 package com.audora.lotting_be.controller;
 
+import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Phase;
+import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,8 @@ public class PhaseController {
 
     @Autowired
     private PhaseService phaseService;
+    @Autowired
+    private CustomerService customerService;
 
     /**
      * Phase 업데이트 엔드포인트
@@ -39,6 +43,14 @@ public class PhaseController {
         phase.setSum(phaseDetails.getSum());
 
         Phase updatedPhase = phaseService.savePhase(phase);
+
+        // 변경된 Phase를 바탕으로 Status 재계산
+        Customer customer = updatedPhase.getCustomer();
+        // Status 필드를 업데이트하는 메서드 (CustomerService에 존재한다고 가정)
+        customerService.updateStatusFields(customer);
+        // 업데이트된 상태를 DB에 반영
+        customerService.saveCustomer(customer);
+
         return ResponseEntity.ok(updatedPhase);
     }
 

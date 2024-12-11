@@ -34,9 +34,13 @@ public class CustomerService {
     }
 
     public Customer createCustomer(Customer customer) {
+        // ID 중복 확인
+        if (customerRepository.existsById(customer.getId())) {
+            throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
+        }
 
         Fee fee = feeRepository.findByGroupnameAndBatch(
-                customer.getType() + customer.getGroupname(), customer.getBatch()); // 유저테이블 타입 = 차수테이블 군, 유저테이블 batch = 차수
+                customer.getType() + customer.getGroupname(), customer.getBatch());
 
         if (fee != null) {
             List<FeePerPhase> feePerPhases = fee.getFeePerPhases();

@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 public class Customer {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id; // 관리번호
 
     private String customertype; //분류(회원)

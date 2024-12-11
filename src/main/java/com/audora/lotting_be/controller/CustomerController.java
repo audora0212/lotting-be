@@ -189,7 +189,14 @@ public class CustomerController {
         existingCustomer.getCustomerData().setResnumback(updatedCustomer.getCustomerData().getResnumback());
         existingCustomer.getCustomerData().setEmail(updatedCustomer.getCustomerData().getEmail());
 
+        // legalAddress 업데이트(우편번호, 주소 추가)
+        existingCustomer.getLegalAddress().setPostnumber(updatedCustomer.getLegalAddress().getPostnumber()); // 추가
+        existingCustomer.getLegalAddress().setPost(updatedCustomer.getLegalAddress().getPost()); // 추가
         existingCustomer.getLegalAddress().setDetailaddress(updatedCustomer.getLegalAddress().getDetailaddress());
+
+        // postreceive 업데이트(우편번호, 주소 추가)
+        existingCustomer.getPostreceive().setPostnumberreceive(updatedCustomer.getPostreceive().getPostnumberreceive()); // 추가
+        existingCustomer.getPostreceive().setPostreceive(updatedCustomer.getPostreceive().getPostreceive()); // 추가
         existingCustomer.getPostreceive().setDetailaddressreceive(updatedCustomer.getPostreceive().getDetailaddressreceive());
 
         existingCustomer.getFinancial().setBankname(updatedCustomer.getFinancial().getBankname());
@@ -226,7 +233,6 @@ public class CustomerController {
         existingCustomer.getAttachments().setFileinfo(updatedCustomer.getAttachments().getFileinfo());
 
         // 기타 필요한 필드 업데이트
-
 
         customerService.saveCustomer(existingCustomer);
 

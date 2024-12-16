@@ -156,17 +156,44 @@ public class CustomerService {
     }
 
     /**
-     * 이름/번호로 고객을 검색합니다.
+     * 이름과 번호로 고객을 검색합니다.
+     * 번호로 검색할 때도 부분 일치를 지원합니다.
+     *
+     * @param name   검색할 이름 (선택 사항)
+     * @param number 검색할 번호 (선택 사항, 부분 일치 가능)
+     * @return 검색된 고객 리스트
      */
     public List<Customer> searchCustomers(String name, String number) {
         if (name != null && number != null) {
-            return customerRepository.findByCustomerDataNameAndId(name, Integer.parseInt(number));
+            try {
+                // 번호가 숫자일 경우 부분 일치 검색 시도
+                if (number.matches("\\d+")) {
+                    List<Customer> customersById = customerRepository.findByIdContaining(number);
+                    List<Customer> customersByNameAndId = customerRepository.findByCustomerDataNameAndId(name, Integer.parseInt(number));
+                    // 두 리스트를 병합 (중복 제거)
+                    Set<Customer> resultSet = new HashSet<>(customersById);
+                    resultSet.addAll(customersByNameAndId);
+                    return new ArrayList<>(resultSet);
+                } else {
+                    // 번호가 숫자가 아닐 경우 이름으로만 검색
+                    return customerRepository.findByCustomerDataNameContaining(name);
+                }
+            } catch (NumberFormatException e) {
+                // 번호가 숫자가 아닐 경우 이름으로만 검색
+                return customerRepository.findByCustomerDataNameContaining(name);
+            }
         } else if (name != null) {
             return customerRepository.findByCustomerDataNameContaining(name);
         } else if (number != null) {
-            return customerRepository.findById(Integer.parseInt(number))
-                    .map(Collections::singletonList)
-                    .orElse(Collections.emptyList());
+            try {
+                if (number.matches("\\d+")) {
+                    return customerRepository.findByIdContaining(number);
+                } else {
+                    return Collections.emptyList();
+                }
+            } catch (Exception e) {
+                return Collections.emptyList();
+            }
         } else {
             return customerRepository.findAll();
         }

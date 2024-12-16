@@ -4,11 +4,14 @@ package com.audora.lotting_be.model.customer;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Data
+@EqualsAndHashCode(exclude = "status")
 public class Customer {
     @Id
     private Integer id; // 관리번호

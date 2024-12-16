@@ -4,9 +4,11 @@ package com.audora.lotting_be.model.customer;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Data
+@EqualsAndHashCode(exclude = "customer") // customer 필드 제외
 public class Status {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

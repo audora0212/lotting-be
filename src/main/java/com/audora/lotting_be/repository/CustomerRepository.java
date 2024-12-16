@@ -27,4 +27,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
      */
     @Query(value = "SELECT * FROM customer WHERE CAST(id AS CHAR) LIKE %:idPart%", nativeQuery = true)
     List<Customer> findByIdContaining(@Param("idPart") String idPart);
+
+    @Query(value = "SELECT * FROM customer WHERE name LIKE CONCAT('%', :name, '%') AND CAST(id AS CHAR) LIKE CONCAT('%', :idPart, '%')", nativeQuery = true)
+    List<Customer> findByNameContainingAndIdContaining(@Param("name") String name, @Param("idPart") String idPart);
+
 }

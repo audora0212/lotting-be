@@ -27,7 +27,7 @@ public class Attachments {
     private Boolean generalmeetingconsentformprovided; // 총회 동의서 제출 여부
     private Boolean prizeattachment; // 사은품 제출 여부
 
-    private Boolean prizename; //사은품명
-    private LocalDate prizedate; //사은품지급일자
+    private String prizename; //사은품명 *새로 추가한 항목
+    private LocalDate prizedate; //사은품지급일자 *새로 추가한 항목
 
 }

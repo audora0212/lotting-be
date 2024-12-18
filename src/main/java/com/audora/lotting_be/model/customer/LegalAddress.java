@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class LegalAddress {
     private Integer postnumber; //우편번호
-    private String post; //도
+    private String post; //주소
     private String detailaddress; //상세주소
 }
 

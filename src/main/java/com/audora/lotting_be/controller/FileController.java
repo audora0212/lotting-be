@@ -84,5 +84,19 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
+    // **추가: 파일 삭제 메서드**
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteFile(@RequestParam("filename") String filename) {
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                return ResponseEntity.ok("파일이 성공적으로 삭제되었습니다.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("파일을 찾을 수 없습니다.");
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 삭제 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 }

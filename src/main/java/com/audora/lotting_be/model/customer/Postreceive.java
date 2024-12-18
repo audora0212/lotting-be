@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 public class Postreceive {
     private Integer postnumberreceive; //우편번호
-    private String postreceive; //도
+    private String postreceive; //주소
     private String detailaddressreceive; //상세주소
 }

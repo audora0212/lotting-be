@@ -1,7 +1,8 @@
-// CustomerController.java
+// src/main/java/com/audora/lotting_be/controller/CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
+import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Loan;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.payload.response.MessageResponse;
@@ -11,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 @RestController
 @RequestMapping("/customers")
@@ -24,17 +25,14 @@ public class CustomerController {
     @Autowired
     private PhaseService phaseService;
 
-    // 고객 생성시 아이디 받아오기
     @GetMapping("/nextId")
     public ResponseEntity<Integer> getNextCustomerId() {
         Integer nextId = customerService.getNextCustomerId();
         return ResponseEntity.ok(nextId);
     }
 
-    // 고객 생성 엔드포인트
     @PostMapping
     public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        // 추가: 수신된 전체 데이터 출력
         System.out.println("Received Customer Data: " + customer);
         if (customer.getDeposits() != null) {
             System.out.println("Received Deposit Date: " + customer.getDeposits().getDepositdate());
@@ -46,7 +44,6 @@ public class CustomerController {
         return ResponseEntity.ok(createdCustomer);
     }
 
-    // 고객 조회 엔드포인트
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Integer id) {
         Customer customer = customerService.getCustomerById(id);
@@ -57,7 +54,6 @@ public class CustomerController {
         }
     }
 
-    // Phase 조회 엔드포인트
     @GetMapping("/{id}/phases")
     public ResponseEntity<List<Phase>> getPhasesByCustomerId(@PathVariable Integer id) {
         List<Phase> phases = phaseService.getPhasesByCustomerId(id);
@@ -68,7 +64,6 @@ public class CustomerController {
         }
     }
 
-    // 고객 검색 페이지
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> searchCustomers(
             @RequestParam(required = false) String name,
@@ -78,14 +73,12 @@ public class CustomerController {
         return ResponseEntity.ok(customers);
     }
 
-    // 고객 삭제 엔드포인트
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Integer id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();
     }
 
-    //납입금 관리 페이지 미납차수
     @GetMapping("/{customerId}/pending-phases")
     public ResponseEntity<List<Phase>> getPendingPhases(@PathVariable Integer customerId) {
         List<Phase> pendingPhases = customerService.getPendingPhases(customerId);
@@ -96,7 +89,6 @@ public class CustomerController {
         }
     }
 
-    //납입금 관리 페이지 완납차수
     @GetMapping("/{customerId}/completed-phases")
     public ResponseEntity<List<Phase>> getCompletedPhases(@PathVariable Integer customerId) {
         List<Phase> completedPhases = customerService.getCompletedPhases(customerId);
@@ -128,12 +120,10 @@ public class CustomerController {
         Customer customer = optionalCustomer.get();
         Loan loan = customer.getLoan();
 
-        // loan이 null이면 새로 생성해준다.
         if (loan == null) {
             loan = new Loan();
         }
 
-        // Loan 필드 업데이트
         loan.setLoandate(updatedLoan.getLoandate());
         loan.setLoanbank(updatedLoan.getLoanbank());
         loan.setLoanammount(updatedLoan.getLoanammount());
@@ -142,13 +132,11 @@ public class CustomerController {
         loan.setLoanselfsum(updatedLoan.getLoanselfsum());
         loan.setLoanselfcurrent(updatedLoan.getLoanselfcurrent());
 
-        // 변경된 loan을 customer에 다시 세팅
         customer.setLoan(loan);
         customerService.saveCustomer(customer);
 
         return ResponseEntity.ok(customer);
     }
-
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelCustomer(@PathVariable Integer id) {
@@ -163,6 +151,7 @@ public class CustomerController {
 
         return ResponseEntity.ok(new MessageResponse("Customer cancelled successfully."));
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
         Customer existingCustomer = customerService.getCustomerById(id);
@@ -170,7 +159,6 @@ public class CustomerController {
             return ResponseEntity.notFound().build();
         }
 
-        // 필요한 필드들 업데이트
         existingCustomer.setCustomertype(updatedCustomer.getCustomertype());
         existingCustomer.setType(updatedCustomer.getType());
         existingCustomer.setGroupname(updatedCustomer.getGroupname());
@@ -189,7 +177,12 @@ public class CustomerController {
         existingCustomer.getCustomerData().setResnumback(updatedCustomer.getCustomerData().getResnumback());
         existingCustomer.getCustomerData().setEmail(updatedCustomer.getCustomerData().getEmail());
 
+        existingCustomer.getLegalAddress().setPostnumber(updatedCustomer.getLegalAddress().getPostnumber());
+        existingCustomer.getLegalAddress().setPost(updatedCustomer.getLegalAddress().getPost());
         existingCustomer.getLegalAddress().setDetailaddress(updatedCustomer.getLegalAddress().getDetailaddress());
+
+        existingCustomer.getPostreceive().setPostnumberreceive(updatedCustomer.getPostreceive().getPostnumberreceive());
+        existingCustomer.getPostreceive().setPostreceive(updatedCustomer.getPostreceive().getPostreceive());
         existingCustomer.getPostreceive().setDetailaddressreceive(updatedCustomer.getPostreceive().getDetailaddressreceive());
 
         existingCustomer.getFinancial().setBankname(updatedCustomer.getFinancial().getBankname());
@@ -209,7 +202,6 @@ public class CustomerController {
         existingCustomer.getMgm().setMgminstitution(updatedCustomer.getMgm().getMgminstitution());
         existingCustomer.getMgm().setMgmaccount(updatedCustomer.getMgm().getMgmaccount());
 
-        // Attachments 업데이트
         existingCustomer.getAttachments().setIsuploaded(updatedCustomer.getAttachments().getIsuploaded());
         existingCustomer.getAttachments().setSealcertificateprovided(updatedCustomer.getAttachments().getSealcertificateprovided());
         existingCustomer.getAttachments().setSelfsignatureconfirmationprovided(updatedCustomer.getAttachments().getSelfsignatureconfirmationprovided());
@@ -225,13 +217,22 @@ public class CustomerController {
         existingCustomer.getAttachments().setContract(updatedCustomer.getAttachments().getContract());
         existingCustomer.getAttachments().setFileinfo(updatedCustomer.getAttachments().getFileinfo());
 
-        // 기타 필요한 필드 업데이트
-
-
         customerService.saveCustomer(existingCustomer);
 
         return ResponseEntity.ok(existingCustomer);
     }
 
+    // 정계약(customertype='c')한 고객 수 조회 엔드포인트
+    @GetMapping("/count/contracted")
+    public ResponseEntity<Long> countContractedCustomers() {
+        long count = customerService.countContractedCustomers();
+        return ResponseEntity.ok(count);
+    }
 
+    // 미납이 아닌(모든 예정금액 납부완료 또는 미납없이 계획대로 진행중) 회원 수 조회 엔드포인트
+    @GetMapping("/count/fullypaid")
+    public ResponseEntity<Long> countFullyPaidCustomers() {
+        long count = customerService.countFullyPaidOrNotOverdueCustomers();
+        return ResponseEntity.ok(count);
+    }
 }

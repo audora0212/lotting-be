@@ -1,3 +1,4 @@
+// src/main/java/com/audora/lotting_be/model/customer/Postreceive.java
 package com.audora.lotting_be.model.customer;
 
 import jakarta.persistence.Embeddable;

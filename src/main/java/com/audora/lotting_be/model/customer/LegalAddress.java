@@ -1,3 +1,4 @@
+// src/main/java/com/audora/lotting_be/model/customer/LegalAddress.java
 package com.audora.lotting_be.model.customer;
 
 import jakarta.persistence.Embeddable;
@@ -10,3 +11,4 @@ public class LegalAddress {
     private String post; //도
     private String detailaddress; //상세주소
 }
+

@@ -4,6 +4,8 @@ package com.audora.lotting_be.model.customer;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Embeddable
 @Data
 public class Attachments {
@@ -24,5 +26,8 @@ public class Attachments {
     private Boolean preferenceattachment; //선호도조사 제출여부
     private Boolean generalmeetingconsentformprovided; // 총회 동의서 제출 여부
     private Boolean prizeattachment; // 사은품 제출 여부
+
+    private Boolean prizename; //사은품명
+    private LocalDate prizedate; //사은품지급일자
 
 }

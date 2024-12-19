@@ -2,7 +2,6 @@
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
-import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Loan;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.payload.response.MessageResponse;
@@ -154,6 +153,15 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
+        // updatedCustomer로 들어온 데이터 확인 로깅
+        System.out.println("========== Updated Customer JSON Data ==========");
+        System.out.println(updatedCustomer); // Customer 엔티티의 toString() 사용
+        if (updatedCustomer.getAttachments() != null) {
+            System.out.println("Prize Name: " + updatedCustomer.getAttachments().getPrizename());
+            System.out.println("Prize Date: " + updatedCustomer.getAttachments().getPrizedate());
+        }
+        System.out.println("===============================================");
+
         Customer existingCustomer = customerService.getCustomerById(id);
         if (existingCustomer == null) {
             return ResponseEntity.notFound().build();
@@ -217,19 +225,21 @@ public class CustomerController {
         existingCustomer.getAttachments().setContract(updatedCustomer.getAttachments().getContract());
         existingCustomer.getAttachments().setFileinfo(updatedCustomer.getAttachments().getFileinfo());
 
+        // 새로 추가된 필드도 설정
+        existingCustomer.getAttachments().setPrizename(updatedCustomer.getAttachments().getPrizename());
+        existingCustomer.getAttachments().setPrizedate(updatedCustomer.getAttachments().getPrizedate());
+
         customerService.saveCustomer(existingCustomer);
 
         return ResponseEntity.ok(existingCustomer);
     }
 
-    // 정계약(customertype='c')한 고객 수 조회 엔드포인트
     @GetMapping("/count/contracted")
     public ResponseEntity<Long> countContractedCustomers() {
         long count = customerService.countContractedCustomers();
         return ResponseEntity.ok(count);
     }
 
-    // 미납이 아닌(모든 예정금액 납부완료 또는 미납없이 계획대로 진행중) 회원 수 조회 엔드포인트
     @GetMapping("/count/fullypaid")
     public ResponseEntity<Long> countFullyPaidCustomers() {
         long count = customerService.countFullyPaidOrNotOverdueCustomers();

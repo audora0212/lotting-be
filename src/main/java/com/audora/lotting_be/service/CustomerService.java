@@ -1,4 +1,3 @@
-// src/main/java/com/audora/lotting_be/service/CustomerService.java
 package com.audora.lotting_be.service;
 
 import com.audora.lotting_be.model.customer.Customer;
@@ -20,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
+
     @Autowired
     private CustomerRepository customerRepository;
 
@@ -55,8 +55,11 @@ public class CustomerService {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
         }
 
+        // type + groupname, batch로 Fee 조회
         Fee fee = feeRepository.findByGroupnameAndBatch(
-                customer.getType() + customer.getGroupname(), customer.getBatch());
+                customer.getType() + customer.getGroupname(),
+                customer.getBatch()
+        );
 
         // Fee 정보가 있다면 해당 정보를 기반으로 Phase 초기화
         if (fee != null) {
@@ -68,22 +71,29 @@ public class CustomerService {
                 phase.setPhaseNumber(feePerPhase.getPhaseNumber());
                 phase.setCharge(feePerPhase.getPhasefee());
 
+                // --- 추가한 로직: phasedateString 세팅 ---
+                phase.setPlanneddateString(feePerPhase.getPhasedate());
+
+                // discount, exemption, service는 0으로 가정
                 Long discount = 0L;
                 Long exemption = 0L;
                 Long service = 0L;
 
-                // feesum = charge - discount - exemption + service 로 계산 (현재 discount/exemption/service=0)
+                // feesum = charge - discount - exemption + service
                 Long feesum = feePerPhase.getPhasefee() - discount - exemption + service;
                 phase.setFeesum(feesum);
 
-                // sum을 초기에는 charge로 설정
+                // sum을 초기에는 총액(phasefee) 그대로
                 phase.setSum(feePerPhase.getPhasefee());
 
-                // phasedate를 해석해 plannedDate 계산
+                // 기존 예정일자 계산 로직
                 LocalDate plannedDate = calculatePlannedDate(
-                        customer.getRegisterdate(), feePerPhase.getPhasedate());
+                        customer.getRegisterdate(),
+                        feePerPhase.getPhasedate()
+                );
                 phase.setPlanneddate(plannedDate);
 
+                // 양방향 설정
                 phase.setCustomer(customer);
                 phases.add(phase);
             }
@@ -104,17 +114,28 @@ public class CustomerService {
     }
 
     /**
-     * phaseDate 문자열을 해석하여 registerDate를 기준으로 연, 달을 더한 날짜 반환
+     * ~달 / ~개월 / ~년 형태의 문자열을 해석하여
+     * registerDate에 연, 달을 더한 날짜를 반환
      */
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
+        if (phasedate == null || phasedate.isEmpty()) {
+            // null 또는 빈 문자열이면 등록일 그대로 반환
+            return registerDate;
+        }
+
+        // '달' 또는 '개월'로 끝나는 경우
         if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {
             int months = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
             return registerDate.plusMonths(months);
-        } else if (phasedate.endsWith("년")) {
+        }
+        // '년'으로 끝나는 경우
+        else if (phasedate.endsWith("년")) {
             int years = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
             return registerDate.plusYears(years);
-        } else {
-            return registerDate;
+        }
+        // 위 두 가지 경우가 아니면 registerDate 그대로
+        else {
+            return registerDate.plusYears(100);
         }
     }
 
@@ -155,7 +176,6 @@ public class CustomerService {
 
         customer.setStatus(status);
     }
-
 
     /**
      * 이름과 번호로 고객을 검색합니다.
@@ -296,11 +316,17 @@ public class CustomerService {
 
             LateFeeInfo info = new LateFeeInfo();
             info.setId(customer.getId());
-            info.setCustomertype(customer.getCustomertype() != null ? customer.getCustomertype() : "N/A");
-            info.setName(customer.getCustomerData() != null && customer.getCustomerData().getName() != null
-                    ? customer.getCustomerData().getName()
-                    : "N/A");
-            info.setRegisterdate(customer.getRegisterdate() != null ? customer.getRegisterdate() : null);
+            info.setCustomertype(
+                    customer.getCustomertype() != null ? customer.getCustomertype() : "N/A"
+            );
+            info.setName(
+                    customer.getCustomerData() != null && customer.getCustomerData().getName() != null
+                            ? customer.getCustomerData().getName()
+                            : "N/A"
+            );
+            info.setRegisterdate(
+                    customer.getRegisterdate() != null ? customer.getRegisterdate() : null
+            );
 
             if (unpaidPhases.isEmpty()) {
                 // 미납 없는 회원
@@ -311,7 +337,7 @@ public class CustomerService {
                 info.setLateRate(0.0);
                 info.setOverdueAmount(0L);
                 Long paidAmount = phases.stream()
-                        .mapToLong(phase -> phase.getCharged() != null ? phase.getCharged() : 0L)
+                        .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
                         .sum();
                 info.setPaidAmount(paidAmount);
                 info.setLateFee(0.0);
@@ -344,11 +370,13 @@ public class CustomerService {
                 info.setRecentPaymentDate(recentPaymentDate);
 
                 // 4. 연체일수(daysOverdue)
-                long daysOverdue = lateBaseDate != null ? ChronoUnit.DAYS.between(lateBaseDate, today) : 0;
+                long daysOverdue = lateBaseDate != null
+                        ? ChronoUnit.DAYS.between(lateBaseDate, today)
+                        : 0;
                 if (daysOverdue < 0) daysOverdue = 0; // 연체기준일이 오늘 이후라면 연체일수는 0
                 info.setDaysOverdue(daysOverdue);
 
-                // 5. 연체율(lateRate) 가정: 일 0.05%
+                // 5. 연체율(lateRate) 가정: 일 0.05% (0.0005)
                 double lateRate = 0.0005;
                 info.setLateRate(lateRate);
 
@@ -368,8 +396,7 @@ public class CustomerService {
                 double lateFee = overdueAmount * lateRate * daysOverdue;
                 info.setLateFee(lateFee);
 
-                // 9. 내야할 돈 합계(totalOwed): 미납액 + 연체료
-                // 연체료는 double이므로 반올림 필요할 수 있음
+                // 9. 내야할 돈 합계(totalOwed): 미납액 + 연체료 (연체료는 반올림 가능)
                 long totalOwed = overdueAmount + Math.round(lateFee);
                 info.setTotalOwed(totalOwed);
 
@@ -414,7 +441,6 @@ public class CustomerService {
                 .count();
     }
 
-
     /**
      * 모든 고객에 대한 입금 히스토리를 DTO로 변환하여 반환
      */
@@ -427,6 +453,7 @@ public class CustomerService {
                 .map(this::mapToCustomerDepositDTO)
                 .collect(Collectors.toList());
     }
+
     private CustomerDepositDTO mapToCustomerDepositDTO(Customer customer) {
         CustomerDepositDTO dto = new CustomerDepositDTO();
 

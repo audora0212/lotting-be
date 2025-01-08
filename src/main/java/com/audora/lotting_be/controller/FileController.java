@@ -7,6 +7,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -132,9 +133,9 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        // 2) 템플릿 파일 존재 확인
-        File templateFile = new File("src/main/resources/excel_templates/format1.xlsx");
-        if (!templateFile.exists()) {
+        // 2) 템플릿 파일을 ClassPathResource로 불러오기
+        ClassPathResource templateResource = new ClassPathResource("excel_templates/format1.xlsx");
+        if (!templateResource.exists()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
@@ -142,7 +143,9 @@ public class FileController {
         File tempFile;
         try {
             tempFile = Files.createTempFile("format1-", ".xlsx").toFile();
-            Files.copy(templateFile.toPath(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream is = templateResource.getInputStream()) {
+                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
@@ -189,9 +192,9 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        // 2) 템플릿 파일 존재 확인
-        File templateFile = new File("src/main/resources/excel_templates/format2.xlsx");
-        if (!templateFile.exists()) {
+        // 2) 템플릿 파일을 ClassPathResource로 불러오기
+        ClassPathResource templateResource = new ClassPathResource("excel_templates/format2.xlsx");
+        if (!templateResource.exists()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
 
@@ -199,7 +202,9 @@ public class FileController {
         File tempFile;
         try {
             tempFile = Files.createTempFile("format2-", ".xlsx").toFile();
-            Files.copy(templateFile.toPath(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream is = templateResource.getInputStream()) {
+                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }

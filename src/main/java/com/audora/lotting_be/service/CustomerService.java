@@ -4,6 +4,7 @@ package com.audora.lotting_be.service;
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Status;
+import com.audora.lotting_be.payload.response.CustomerDepositDTO;
 import com.audora.lotting_be.payload.response.LateFeeInfo;
 import com.audora.lotting_be.model.Fee.Fee;
 import com.audora.lotting_be.model.Fee.FeePerPhase;
@@ -411,5 +412,78 @@ public class CustomerService {
                     return !hasOverdue; // 미납이 아닌 경우 true
                 })
                 .count();
+    }
+
+
+    /**
+     * 모든 고객에 대한 입금 히스토리를 DTO로 변환하여 반환
+     */
+    public List<CustomerDepositDTO> getAllCustomerDepositDTOs() {
+        // 모든 고객 조회
+        List<Customer> allCustomers = customerRepository.findAll();
+
+        // Customer -> CustomerDepositDTO 변환
+        return allCustomers.stream()
+                .map(this::mapToCustomerDepositDTO)
+                .collect(Collectors.toList());
+    }
+    private CustomerDepositDTO mapToCustomerDepositDTO(Customer customer) {
+        CustomerDepositDTO dto = new CustomerDepositDTO();
+
+        // 예시 매핑 (필드 이름은 실제 상황에 맞게 수정)
+        dto.setMemberNumber(customer.getId());
+        dto.setContractor(customer.getCustomerData().getName());
+        // 예: 마지막 거래일시(lastTransactionDateTime)는
+        //     최근에 낸 Phase의 fullpaiddate(또는 bank 입금 시점) 등으로 설정 가능.
+        //     여기서는 간단히 null 처리
+        dto.setLastTransactionDateTime(null);
+
+        // 적요, 기재내용, 예약 등등은 현재 테이블 구조나
+        // 실제로 어디서 데이터를 가져올지 불명확하므로 임시로 처리:
+        dto.setRemarks("임시 적요");
+        dto.setMemo("임시 메모");
+        dto.setReservation("임시 예약");
+
+        // 맡기신 금액, 찾으신 금액도 예시에 맞춰 임의로 로직 구성
+        // 실제로는 customer.getDeposits().getDepositAmmount() 등을 합산하거나
+        // 환불 내역 등을 반영해야 함
+        if (customer.getDeposits() != null && customer.getDeposits().getDepositammount() != null) {
+            dto.setDepositAmount(customer.getDeposits().getDepositammount());
+        } else {
+            dto.setDepositAmount(0L);
+        }
+        // withdrawnAmount도 실제 로직에 맞춰 계산
+        dto.setWithdrawnAmount(0L);
+
+        // 취급점(은행 지점)
+        dto.setBankBranch("미정");
+
+        // 계좌 유형
+        dto.setAccount("h"); // 예시
+
+        // 1~10차 납부 여부
+        // 실제로는 customer.getPhases()를 순회하여 phaseNumber별로 x1(납부완료)인지 0(미납)인지 판단
+        dto.setDepositPhase1("x1");
+        dto.setDepositPhase2("0");
+        dto.setDepositPhase3("0");
+        dto.setDepositPhase4("0");
+        dto.setDepositPhase5("0");
+        dto.setDepositPhase6("0");
+        dto.setDepositPhase7("0");
+        dto.setDepositPhase8("0");
+        dto.setDepositPhase9("0");
+        dto.setDepositPhase10("0");
+
+        // 대출금액/일자
+        if (customer.getLoan() != null) {
+            dto.setLoanAmount(customer.getLoan().getLoanammount());
+            dto.setLoanDate(customer.getLoan().getLoandate());
+        }
+
+        // 임시, 비고
+        dto.setTemporary("임시 필드");
+        dto.setNote("비고");
+
+        return dto;
     }
 }

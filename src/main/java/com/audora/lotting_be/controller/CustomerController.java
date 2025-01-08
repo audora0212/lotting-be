@@ -4,6 +4,7 @@ package com.audora.lotting_be.controller;
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Loan;
 import com.audora.lotting_be.model.customer.Phase;
+import com.audora.lotting_be.payload.response.CustomerDepositDTO;
 import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
@@ -245,4 +246,26 @@ public class CustomerController {
         long count = customerService.countFullyPaidOrNotOverdueCustomers();
         return ResponseEntity.ok(count);
     }
+
+    @RestController
+    @RequestMapping("/deposithistory")
+    public class DepositHistoryController {
+
+        private final CustomerService customerService;
+
+        @Autowired
+        public DepositHistoryController(CustomerService customerService) {
+            this.customerService = customerService;
+        }
+
+        /**
+         * 모든 회원의 입금 기록 DTO 리스트 반환
+         */
+        @GetMapping
+        public ResponseEntity<List<CustomerDepositDTO>> getAllDepositHistory() {
+            List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
+            return ResponseEntity.ok(depositDTOList);
+        }
+    }
+
 }

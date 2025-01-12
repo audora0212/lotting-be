@@ -276,7 +276,7 @@ public class CustomerController {
     /**
      * 모든 회원들의 정보를 CustomerDepositDTO 형태로 반환
      */
-    @GetMapping("/customerdeposity")
+    @GetMapping("/customerdeposit")
     public ResponseEntity<List<CustomerDepositDTO>> getAllCustomerDeposity() {
         // service 호출 -> DTO 리스트 받아오기
         List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();

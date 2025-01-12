@@ -1,18 +1,19 @@
 package com.audora.lotting_be.service;
 
+import com.audora.lotting_be.model.Fee.Fee;
+import com.audora.lotting_be.model.Fee.FeePerPhase;
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Status;
 import com.audora.lotting_be.payload.response.CustomerDepositDTO;
 import com.audora.lotting_be.payload.response.LateFeeInfo;
-import com.audora.lotting_be.model.Fee.Fee;
-import com.audora.lotting_be.model.Fee.FeePerPhase;
 import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.FeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -442,7 +443,8 @@ public class CustomerService {
     }
 
     /**
-     * 모든 고객에 대한 입금 히스토리를 DTO로 변환하여 반환
+     * 모든 회원의 입금 기록 DTO 리스트 반환
+     * (수정: 요구사항에 맞춰 DTO 구성 보강)
      */
     public List<CustomerDepositDTO> getAllCustomerDepositDTOs() {
         // 모든 고객 조회
@@ -454,63 +456,112 @@ public class CustomerService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Customer -> CustomerDepositDTO 로 매핑하는 전용 메서드
+     */
     private CustomerDepositDTO mapToCustomerDepositDTO(Customer customer) {
         CustomerDepositDTO dto = new CustomerDepositDTO();
 
-        // 예시 매핑 (필드 이름은 실제 상황에 맞게 수정)
+        // 1) memberNumber: 고객의 id
         dto.setMemberNumber(customer.getId());
-        dto.setContractor(customer.getCustomerData().getName());
-        // 예: 마지막 거래일시(lastTransactionDateTime)는
-        //     최근에 낸 Phase의 fullpaiddate(또는 bank 입금 시점) 등으로 설정 가능.
-        //     여기서는 간단히 null 처리
-        dto.setLastTransactionDateTime(null);
 
-        // 적요, 기재내용, 예약 등등은 현재 테이블 구조나
-        // 실제로 어디서 데이터를 가져올지 불명확하므로 임시로 처리:
-        dto.setRemarks("임시 적요");
-        dto.setMemo("임시 메모");
-        dto.setReservation("임시 예약");
+        // 2) lastTransactionDateTime: phase 중 가장 최근 fullpaiddate를 찾아 LocalDateTime으로
+        LocalDate lastPaidDate = customer.getPhases().stream()
+                .map(Phase::getFullpaiddate)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
 
-        // 맡기신 금액, 찾으신 금액도 예시에 맞춰 임의로 로직 구성
-        // 실제로는 customer.getDeposits().getDepositAmmount() 등을 합산하거나
-        // 환불 내역 등을 반영해야 함
-        if (customer.getDeposits() != null && customer.getDeposits().getDepositammount() != null) {
-            dto.setDepositAmount(customer.getDeposits().getDepositammount());
+        if (lastPaidDate != null) {
+            dto.setLastTransactionDateTime(lastPaidDate.atStartOfDay());
         } else {
-            dto.setDepositAmount(0L);
+            dto.setLastTransactionDateTime(null);
         }
-        // withdrawnAmount도 실제 로직에 맞춰 계산
-        dto.setWithdrawnAmount(0L);
 
-        // 취급점(은행 지점)
-        dto.setBankBranch("미정");
+        // 3) remarks, memo: 임시로 비워둠
+        dto.setRemarks("");
+        dto.setMemo("");
 
-        // 계좌 유형
-        dto.setAccount("h"); // 예시
+        // 4) contractor: 가입자명 (customerData.name)
+        if (customer.getCustomerData() != null) {
+            dto.setContractor(customer.getCustomerData().getName());
+        } else {
+            dto.setContractor("");
+        }
 
-        // 1~10차 납부 여부
-        // 실제로는 customer.getPhases()를 순회하여 phaseNumber별로 x1(납부완료)인지 0(미납)인지 판단
-        dto.setDepositPhase1("x1");
-        dto.setDepositPhase2("0");
-        dto.setDepositPhase3("0");
-        dto.setDepositPhase4("0");
-        dto.setDepositPhase5("0");
-        dto.setDepositPhase6("0");
-        dto.setDepositPhase7("0");
-        dto.setDepositPhase8("0");
-        dto.setDepositPhase9("0");
-        dto.setDepositPhase10("0");
+        // 5) withdrawnAmount: 환불금액 (현재 별도 필드가 없으므로 null 처리 or 0L)
+        //    실제 환불 로직 있으면 반영
+        dto.setWithdrawnAmount(null);
 
-        // 대출금액/일자
+        // 6) depositAmount: 지금까지 입금한 금액 총액
+        //    우선 Status.ammountsum이 있다고 가정 -> 없으면 phase.charged 합산
+        Long depositAmount;
+        if (customer.getStatus() != null && customer.getStatus().getAmmountsum() != null) {
+            depositAmount = customer.getStatus().getAmmountsum();
+        } else {
+            depositAmount = customer.getPhases().stream()
+                    .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
+                    .sum();
+        }
+        dto.setDepositAmount(depositAmount);
+
+        // 7) bankBranch: 기존 회원의 은행(financial.bankname 등)
+        if (customer.getFinancial() != null && customer.getFinancial().getBankname() != null) {
+            dto.setBankBranch(customer.getFinancial().getBankname());
+        } else {
+            dto.setBankBranch("");
+        }
+
+        // 8) account: 임시로 "h"
+        dto.setAccount("h");
+
+        // 9) reservation: 임시로 비워두기
+        dto.setReservation("");
+
+        // 10) 1~10차 입금 상태
+        dto.setDepositPhase1(getPhaseStatus(customer, 1));
+        dto.setDepositPhase2(getPhaseStatus(customer, 2));
+        dto.setDepositPhase3(getPhaseStatus(customer, 3));
+        dto.setDepositPhase4(getPhaseStatus(customer, 4));
+        dto.setDepositPhase5(getPhaseStatus(customer, 5));
+        dto.setDepositPhase6(getPhaseStatus(customer, 6));
+        dto.setDepositPhase7(getPhaseStatus(customer, 7));
+        dto.setDepositPhase8(getPhaseStatus(customer, 8));
+        dto.setDepositPhase9(getPhaseStatus(customer, 9));
+        dto.setDepositPhase10(getPhaseStatus(customer, 10));
+
+        // 11) loanAmount, loanDate
         if (customer.getLoan() != null) {
             dto.setLoanAmount(customer.getLoan().getLoanammount());
             dto.setLoanDate(customer.getLoan().getLoandate());
+        } else {
+            dto.setLoanAmount(null);
+            dto.setLoanDate(null);
         }
 
-        // 임시, 비고
-        dto.setTemporary("임시 필드");
-        dto.setNote("비고");
+        // 12) temporary, note: 임시로 비워두기
+        dto.setTemporary("");
+        dto.setNote("");
 
         return dto;
+    }
+
+    /**
+     * 특정 차수(phaseNumber)에 대한 입금 상태 "o"/"x"를 판단하는 헬퍼 메서드
+     */
+    private String getPhaseStatus(Customer customer, int phaseNumber) {
+        Phase targetPhase = customer.getPhases().stream()
+                .filter(p -> p.getPhaseNumber() != null && p.getPhaseNumber() == phaseNumber)
+                .findFirst()
+                .orElse(null);
+
+        if (targetPhase == null) {
+            // 해당 차수가 없으면 "" 반환(혹은 "x")
+            return "";
+        }
+
+        // charged가 0보다 크면 "o", 아니면 "x"
+        Long charged = targetPhase.getCharged();
+        return (charged != null && charged > 0) ? "o" : "x";
     }
 }

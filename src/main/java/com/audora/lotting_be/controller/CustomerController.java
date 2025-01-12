@@ -1,4 +1,3 @@
-// src/main/java/com/audora/lotting_be/controller/CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
@@ -247,6 +246,9 @@ public class CustomerController {
         return ResponseEntity.ok(count);
     }
 
+    /**
+     * (기존 DepositHistoryController는 하위에 위치시킴)
+     */
     @RestController
     @RequestMapping("/deposithistory")
     public class DepositHistoryController {
@@ -266,6 +268,19 @@ public class CustomerController {
             List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
             return ResponseEntity.ok(depositDTOList);
         }
+    }
+
+    // -----------------------------------------------------------------
+    // [추가] 요구사항에 따라 /customers/customerdeposity 엔드포인트도 생성
+    // -----------------------------------------------------------------
+    /**
+     * 모든 회원들의 정보를 CustomerDepositDTO 형태로 반환
+     */
+    @GetMapping("/customerdeposity")
+    public ResponseEntity<List<CustomerDepositDTO>> getAllCustomerDeposity() {
+        // service 호출 -> DTO 리스트 받아오기
+        List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
+        return ResponseEntity.ok(depositDTOList);
     }
 
 }

@@ -496,13 +496,10 @@ public class CustomerService {
         // 6) depositAmount: 지금까지 입금한 금액 총액
         //    우선 Status.ammountsum이 있다고 가정 -> 없으면 phase.charged 합산
         Long depositAmount;
-        if (customer.getStatus() != null && customer.getStatus().getAmmountsum() != null) {
-            depositAmount = customer.getStatus().getAmmountsum();
-        } else {
             depositAmount = customer.getPhases().stream()
                     .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
                     .sum();
-        }
+
         dto.setDepositAmount(depositAmount);
 
         // 7) bankBranch: 기존 회원의 은행(financial.bankname 등)

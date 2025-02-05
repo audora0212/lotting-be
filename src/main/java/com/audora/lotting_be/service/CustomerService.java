@@ -70,32 +70,41 @@ public class CustomerService {
             for (FeePerPhase feePerPhase : feePerPhases) {
                 Phase phase = new Phase();
                 phase.setPhaseNumber(feePerPhase.getPhaseNumber());
-                phase.setCharge(feePerPhase.getPhasefee());
 
-                // --- 추가한 로직: phasedateString 세팅 ---
-                phase.setPlanneddateString(feePerPhase.getPhasedate());
+                // 부담금(charge) 설정
+                Long charge = feePerPhase.getPhasefee();
+                phase.setCharge(charge);
 
-                // discount, exemption, service는 0으로 가정
-                Long discount = 0L;
-                Long exemption = 0L;
+                // 업무대행비(service)와 면제금액(exemption)은 0으로 가정 (필요 시 변경)
                 Long service = 0L;
+                Long exemption = 0L;
+                phase.setService(service);
+                phase.setExemption(exemption);
 
-                // feesum = charge - discount - exemption + service
-                Long feesum = feePerPhase.getPhasefee() - discount - exemption + service;
+                // feesum = charge + service – exemption
+                Long feesum = charge + service - exemption;
                 phase.setFeesum(feesum);
 
-                // sum을 초기에는 총액(phasefee) 그대로
-                phase.setSum(feePerPhase.getPhasefee());
+                // 아직 입금하지 않았으므로 charged = 0, sum = feesum
+                phase.setCharged(0L);
+                phase.setSum(feesum);
 
-                // 기존 예정일자 계산 로직
+                // --- 추가한 로직: 원래 예정일자 텍스트 저장 ---
+                phase.setPlanneddateString(feePerPhase.getPhasedate());
+
+                // 예정일자 계산 (실제 날짜)
                 LocalDate plannedDate = calculatePlannedDate(
                         customer.getRegisterdate(),
                         feePerPhase.getPhasedate()
                 );
                 phase.setPlanneddate(plannedDate);
 
-                // 양방향 설정
-                phase.setCustomer(customer);
+                // 완납일자는 아직 미정
+                phase.setFullpaiddate(null);
+
+                // 기타 값 (discount, move 등) 필요 시 설정
+                // discount는 여기서는 사용하지 않음.
+                phase.setCustomer(customer); // 양방향 설정
                 phases.add(phase);
             }
             customer.setPhases(phases);
@@ -115,65 +124,88 @@ public class CustomerService {
     }
 
     /**
-     * ~달 / ~개월 / ~년 형태의 문자열을 해석하여
-     * registerDate에 연, 달을 더한 날짜를 반환
+     * "~달", "~개월", "~년" 형태의 문자열을 해석하여
+     * registerDate에 해당 기간을 더한 날짜를 반환합니다.
      */
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
         if (phasedate == null || phasedate.isEmpty()) {
-            // null 또는 빈 문자열이면 등록일 그대로 반환
             return registerDate;
         }
-
-        // '달' 또는 '개월'로 끝나는 경우
         if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {
             int months = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
             return registerDate.plusMonths(months);
-        }
-        // '년'으로 끝나는 경우
-        else if (phasedate.endsWith("년")) {
+        } else if (phasedate.endsWith("년")) {
             int years = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
             return registerDate.plusYears(years);
-        }
-        // 위 두 가지 경우가 아니면 registerDate 그대로
-        else {
+        } else {
             return registerDate.plusYears(100);
         }
     }
 
     /**
-     * 고객의 Status 필드를 업데이트 합니다.
-     * exemptionsum, unpaidammout, unpaidphase, ammountsum 등을 갱신.
+     * 고객의 각 Phase 정보를 재계산하고, Status 필드를 업데이트 합니다.
+     * 각 Phase에 대해:
+     *   - feesum = charge + service – exemption
+     *   - sum = feesum – charged
+     * 그리고 Status는 다음과 같이 갱신:
+     *   - exemptionsum: 모든 Phase의 exemption 합계
+     *   - unpaidammout: 모든 Phase의 남은 금액(sum) 합계
+     *   - unpaidphase: 예정일이 오늘 이전이고 fullpaiddate가 없는 Phase 번호들을 콤마로 연결
+     *   - ammountsum: 모든 Phase의 feesum 합계
+     *   - percent40: ammountsum의 40%
      */
     public void updateStatusFields(Customer customer) {
-        Status status = customer.getStatus();
+        List<Phase> phases = customer.getPhases();
+        if (phases != null) {
+            for (Phase phase : phases) {
+                long charge = phase.getCharge() != null ? phase.getCharge() : 0L;
+                long service = phase.getService() != null ? phase.getService() : 0L;
+                long exemption = phase.getExemption() != null ? phase.getExemption() : 0L;
+                long feesum = charge + service - exemption;
+                phase.setFeesum(feesum);
 
-        Long exemptionsum = customer.getPhases().stream()
-                .mapToLong(phase -> phase.getExemption() != null ? phase.getExemption() : 0L)
-                .sum();
+                long charged = phase.getCharged() != null ? phase.getCharged() : 0L;
+                long sum = feesum - charged;
+                phase.setSum(sum);
+            }
+        }
+
+        Status status = customer.getStatus();
+        if (status == null) {
+            status = new Status();
+            status.setCustomer(customer);
+            customer.setStatus(status);
+        }
+
+        long exemptionsum = phases != null ? phases.stream()
+                .mapToLong(p -> p.getExemption() != null ? p.getExemption() : 0L)
+                .sum() : 0L;
         status.setExemptionsum(exemptionsum);
 
-        Long unpaidammout = customer.getPhases().stream()
-                .mapToLong(phase -> phase.getSum() != null ? phase.getSum() : 0L)
-                .sum();
+        long unpaidammout = phases != null ? phases.stream()
+                .mapToLong(p -> p.getSum() != null ? p.getSum() : 0L)
+                .sum() : 0L;
         status.setUnpaidammout(unpaidammout);
 
-        List<Integer> unpaidPhaseNumbers = customer.getPhases().stream()
-                .filter(phase -> phase.getPlanneddate() != null
-                        && phase.getPlanneddate().isBefore(LocalDate.now())
-                        && phase.getFullpaiddate() == null)
+        List<Integer> unpaidPhaseNumbers = phases != null ? phases.stream()
+                .filter(p -> p.getPlanneddate() != null
+                        && p.getPlanneddate().isBefore(LocalDate.now())
+                        && p.getFullpaiddate() == null)
                 .map(Phase::getPhaseNumber)
                 .sorted()
-                .collect(Collectors.toList());
-
+                .collect(Collectors.toList()) : new ArrayList<>();
         String unpaidPhaseStr = unpaidPhaseNumbers.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
         status.setUnpaidphase(unpaidPhaseStr);
 
-        Long ammountsum = customer.getPhases().stream()
-                .mapToLong(phase -> phase.getFeesum() != null ? phase.getFeesum() : 0L)
-                .sum();
+        long ammountsum = phases != null ? phases.stream()
+                .mapToLong(p -> p.getFeesum() != null ? p.getFeesum() : 0L)
+                .sum() : 0L;
         status.setAmmountsum(ammountsum);
+
+        // 예시로 percent40 계산: 전체 금액의 40%
+        status.setPercent40((long) (ammountsum * 0.4));
 
         customer.setStatus(status);
     }
@@ -374,7 +406,7 @@ public class CustomerService {
                 long daysOverdue = lateBaseDate != null
                         ? ChronoUnit.DAYS.between(lateBaseDate, today)
                         : 0;
-                if (daysOverdue < 0) daysOverdue = 0; // 연체기준일이 오늘 이후라면 연체일수는 0
+                if (daysOverdue < 0) daysOverdue = 0;
                 info.setDaysOverdue(daysOverdue);
 
                 // 5. 연체율(lateRate) 가정: 일 0.05% (0.0005)
@@ -393,11 +425,11 @@ public class CustomerService {
                         .sum();
                 info.setPaidAmount(paidAmount);
 
-                // 8. 연체료(lateFee) 계산 예시: overdueAmount * lateRate * daysOverdue
+                // 8. 연체료(lateFee) 계산: overdueAmount * lateRate * daysOverdue
                 double lateFee = overdueAmount * lateRate * daysOverdue;
                 info.setLateFee(lateFee);
 
-                // 9. 내야할 돈 합계(totalOwed): 미납액 + 연체료 (연체료는 반올림 가능)
+                // 9. 내야할 돈 합계(totalOwed): 미납액 + 연체료 (연체료 반올림)
                 long totalOwed = overdueAmount + Math.round(lateFee);
                 info.setTotalOwed(totalOwed);
 
@@ -426,18 +458,12 @@ public class CustomerService {
                 .filter(customer -> {
                     List<Phase> phases = customer.getPhases();
                     if (phases == null || phases.isEmpty()) {
-                        // 차수 정보가 없으면 미납은 아니라고 가정
                         return true;
                     }
-
-                    // 미납 기준: planneddate < today && fullpaiddate == null
-                    // 미납 phase가 하나라도 있으면 false
-                    boolean hasOverdue = phases.stream()
-                            .anyMatch(phase -> phase.getPlanneddate() != null
-                                    && phase.getPlanneddate().isBefore(today)
-                                    && phase.getFullpaiddate() == null);
-
-                    return !hasOverdue; // 미납이 아닌 경우 true
+                    boolean hasOverdue = phases.stream().anyMatch(phase -> phase.getPlanneddate() != null &&
+                            phase.getPlanneddate().isBefore(today) &&
+                            phase.getFullpaiddate() == null);
+                    return !hasOverdue;
                 })
                 .count();
     }
@@ -489,17 +515,13 @@ public class CustomerService {
             dto.setContractor("");
         }
 
-        // 5) withdrawnAmount: 환불금액 (현재 별도 필드가 없으므로 null 처리 or 0L)
-        //    실제 환불 로직 있으면 반영
+        // 5) withdrawnAmount: 환불금액 (현재 별도 필드가 없으므로 null 처리)
         dto.setWithdrawnAmount(null);
 
-        // 6) depositAmount: 지금까지 입금한 금액 총액
-        //    우선 Status.ammountsum이 있다고 가정 -> 없으면 phase.charged 합산
-        Long depositAmount;
-            depositAmount = customer.getPhases().stream()
-                    .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
-                    .sum();
-
+        // 6) depositAmount: 지금까지 입금한 금액 총액 (phase의 charged 합산)
+        Long depositAmount = customer.getPhases().stream()
+                .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
+                .sum();
         dto.setDepositAmount(depositAmount);
 
         // 7) bankBranch: 기존 회원의 은행(financial.bankname 등)
@@ -553,11 +575,9 @@ public class CustomerService {
                 .orElse(null);
 
         if (targetPhase == null) {
-            // 해당 차수가 없으면 "" 반환(혹은 "x")
             return "";
         }
 
-        // charged가 0보다 크면 "o", 아니면 "x"
         Long charged = targetPhase.getCharged();
         return (charged != null && charged > 0) ? "o" : "x";
     }

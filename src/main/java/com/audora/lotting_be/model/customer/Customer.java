@@ -1,6 +1,7 @@
 // src/main/java/com/audora/lotting_be/model/customer/Customer.java
 package com.audora.lotting_be.model.customer;
 
+import com.audora.lotting_be.model.customer.minor.*;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;

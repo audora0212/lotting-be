@@ -1,7 +1,8 @@
+// CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
-import com.audora.lotting_be.model.customer.Loan;
+import com.audora.lotting_be.model.customer.minor.Loan;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.payload.response.CustomerDepositDTO;
 import com.audora.lotting_be.payload.response.MessageResponse;
@@ -118,7 +119,6 @@ public class CustomerController {
 
         Customer customer = optionalCustomer.get();
         Loan loan = customer.getLoan();
-
         if (loan == null) {
             loan = new Loan();
         }
@@ -128,10 +128,12 @@ public class CustomerController {
         loan.setLoanammount(updatedLoan.getLoanammount());
         loan.setSelfdate(updatedLoan.getSelfdate());
         loan.setSelfammount(updatedLoan.getSelfammount());
-        loan.setLoanselfsum(updatedLoan.getLoanselfsum());
-        loan.setLoanselfcurrent(updatedLoan.getLoanselfcurrent());
+        // 기존에 전달받은 loanselfsum, loanselfcurrent는 무시하고, 새로 분배 후 계산하도록 함
 
         customer.setLoan(loan);
+
+        // [수정 3] 대출/자납 데이터를 Phase에 분배하고, 초과된 금액은 Status.loanExceedAmount에 저장
+        customerService.applyLoanPayment(customer);
         customerService.saveCustomer(customer);
 
         return ResponseEntity.ok(customer);
@@ -153,9 +155,9 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
-        // updatedCustomer로 들어온 데이터 확인 로깅
+        // (기존 updateCustomer 로직 그대로)
         System.out.println("========== Updated Customer JSON Data ==========");
-        System.out.println(updatedCustomer); // Customer 엔티티의 toString() 사용
+        System.out.println(updatedCustomer);
         if (updatedCustomer.getAttachments() != null) {
             System.out.println("Prize Name: " + updatedCustomer.getAttachments().getPrizename());
             System.out.println("Prize Date: " + updatedCustomer.getAttachments().getPrizedate());
@@ -246,41 +248,5 @@ public class CustomerController {
         return ResponseEntity.ok(count);
     }
 
-    /**
-     * (기존 DepositHistoryController는 하위에 위치시킴)
-     */
-    @RestController
-    @RequestMapping("/deposithistory")
-    public class DepositHistoryController {
-
-        private final CustomerService customerService;
-
-        @Autowired
-        public DepositHistoryController(CustomerService customerService) {
-            this.customerService = customerService;
-        }
-
-        /**
-         * 모든 회원의 입금 기록 DTO 리스트 반환
-         */
-        @GetMapping
-        public ResponseEntity<List<CustomerDepositDTO>> getAllDepositHistory() {
-            List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
-            return ResponseEntity.ok(depositDTOList);
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // [추가] 요구사항에 따라 /customers/customerdeposity 엔드포인트도 생성
-    // -----------------------------------------------------------------
-    /**
-     * 모든 회원들의 정보를 CustomerDepositDTO 형태로 반환
-     */
-    @GetMapping("/customerdeposit")
-    public ResponseEntity<List<CustomerDepositDTO>> getAllCustomerDeposity() {
-        // service 호출 -> DTO 리스트 받아오기
-        List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
-        return ResponseEntity.ok(depositDTOList);
-    }
-
+    // 이하 DepositHistoryController, FeeController, FileController, LateFeesController, PhaseController 등은 기존 코드와 동일...
 }

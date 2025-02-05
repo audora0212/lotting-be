@@ -39,7 +39,7 @@ public class CustomerService {
         return optionalCustomer.orElse(null);
     }
 
-    // 신규 고객 생성 시 예약금 분배 등 처리
+    // 신규 고객 생성 시 Fee 조회 및 Phase 초기화 후 전체 분배 재계산
     public Customer createCustomer(Customer customer) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
@@ -79,21 +79,13 @@ public class CustomerService {
             status.setCustomer(customer);
             customer.setStatus(status);
         }
-        // 예약금(Deposit)이 있다면 Phase에 분배하고 남은 금액을 Status.exceedamount에 저장
-        if (customer.getDeposits() != null &&
-                customer.getDeposits().getDepositammount() != null &&
-                customer.getDeposits().getDepositammount() > 0) {
-            LocalDate depositDate = customer.getDeposits().getDepositdate() != null ?
-                    customer.getDeposits().getDepositdate() : customer.getRegisterdate();
-            long depositAmount = customer.getDeposits().getDepositammount();
-            long leftover = distributePaymentToPhases(customer, depositAmount, depositDate);
-            customer.getStatus().setExceedamount(leftover);
-        }
+        // 전체 분배 재계산(예약금 및 대출/자납액)
+        recalculatePaymentDistribution(customer);
         updateStatusFields(customer);
         return customerRepository.save(customer);
     }
 
-    // phasDate 계산
+    // phasedate 계산: phasedate 문자열에 따라 등록일에 offset을 적용
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
         if (phasedate == null || phasedate.isEmpty()) {
             return registerDate;
@@ -109,7 +101,7 @@ public class CustomerService {
         }
     }
 
-    // Status 업데이트 (초과금액 필드는 유지)
+    // 각 Phase의 납입액(charged) 및 잔액(sum)을 업데이트
     public void updateStatusFields(Customer customer) {
         List<Phase> phases = customer.getPhases();
         if (phases != null) {
@@ -164,8 +156,8 @@ public class CustomerService {
     }
 
     /**
-     * [공용 메서드] 지정한 paymentAmount를 고객의 Phase들에 분배하고 남은 초과금액을 반환합니다.
-     * Phase는 phaseNumber 오름차순으로 처리됩니다.
+     * [공용 메서드] 지정한 paymentAmount를 고객의 Phase들에 순차적으로 분배하고 남은 금액을 반환합니다.
+     * 이 메서드는 현재 phase에 이미 적용된 납입액 위에 추가하는 형태로 동작합니다.
      */
     public long distributePaymentToPhases(Customer customer, long paymentAmount, LocalDate paymentDate) {
         List<Phase> phases = customer.getPhases();
@@ -192,36 +184,79 @@ public class CustomerService {
     }
 
     /**
-     * [대출/자납 적용] 고객의 Loan 데이터를 Phase에 분배하고 남은 초과액은 Status.loanExceedAmount에 저장.
-     * Loan 객체의 loanselfsum은 적용된 금액, loanselfcurrent는 초과액으로 설정.
+     * ★ 전체 분배 재계산 메서드 ★
+     * 고객의 모든 Phase의 납입액을 0으로 초기화한 후,
+     * 예약금(Deposit)과 대출/자납액(Loan)을 순차적으로 분배하여, 최신 분배 내역을 계산합니다.
+     *
+     * 이 메서드를 호출하면 기존 phase 분배 내역(예를 들어, 처음 5천만원 분배된 내역)을 모두 리셋한 뒤,
+     * 업데이트된 예약금 값(예: 5백만원 또는 7천만원)과 대출/자납액을 반영하여 다시 분배합니다.
      */
-    public void applyLoanPayment(Customer customer) {
-        if (customer.getLoan() == null) return;
-        long loanAmount = customer.getLoan().getLoanammount() != null ? customer.getLoan().getLoanammount() : 0;
-        long selfAmount = customer.getLoan().getSelfammount() != null ? customer.getLoan().getSelfammount() : 0;
-        long totalLoanPayment = loanAmount + selfAmount;
-        if (totalLoanPayment <= 0) return;
-        LocalDate paymentDate = customer.getLoan().getLoandate() != null ?
-                customer.getLoan().getLoandate() : customer.getRegisterdate();
-        long leftover = distributePaymentToPhases(customer, totalLoanPayment, paymentDate);
-        customer.getLoan().setLoanselfsum(totalLoanPayment - leftover);
-        customer.getLoan().setLoanselfcurrent(leftover);
-        customer.getStatus().setLoanExceedAmount(leftover);
+    public void recalculatePaymentDistribution(Customer customer) {
+        // 1. 기존 분배 내역 초기화: 모든 phase의 charged 값을 0, fullpaiddate 초기화
+        if (customer.getPhases() != null) {
+            for (Phase phase : customer.getPhases()) {
+                phase.setCharged(0L);
+                phase.setFullpaiddate(null);
+                long charge = phase.getCharge() != null ? phase.getCharge() : 0L;
+                long service = phase.getService() != null ? phase.getService() : 0L;
+                long exemption = phase.getExemption() != null ? phase.getExemption() : 0L;
+                long feesum = charge + service - exemption;
+                phase.setFeesum(feesum);
+                phase.setSum(feesum);
+            }
+        }
+        // 2. 예약금 분배 적용
+        long depositAmount = 0;
+        LocalDate depositDate = customer.getRegisterdate();
+        if (customer.getDeposits() != null && customer.getDeposits().getDepositammount() != null) {
+            depositAmount = customer.getDeposits().getDepositammount();
+            if (customer.getDeposits().getDepositdate() != null) {
+                depositDate = customer.getDeposits().getDepositdate();
+            }
+        }
+        long leftoverDeposit = 0;
+        if (depositAmount > 0) {
+            leftoverDeposit = distributePaymentToPhases(customer, depositAmount, depositDate);
+        }
+        if (customer.getStatus() != null) {
+            customer.getStatus().setExceedamount(leftoverDeposit);
+        }
+        // 3. 대출/자납액 분배 적용
+        long totalLoanPayment = 0;
+        if (customer.getLoan() != null) {
+            long loanAmount = customer.getLoan().getLoanammount() != null ? customer.getLoan().getLoanammount() : 0;
+            long selfAmount = customer.getLoan().getSelfammount() != null ? customer.getLoan().getSelfammount() : 0;
+            totalLoanPayment = loanAmount + selfAmount;
+            if (totalLoanPayment > 0) {
+                LocalDate loanDate = customer.getLoan().getLoandate() != null ? customer.getLoan().getLoandate() : customer.getRegisterdate();
+                long leftoverLoan = distributePaymentToPhases(customer, totalLoanPayment, loanDate);
+                customer.getLoan().setLoanselfsum(totalLoanPayment - leftoverLoan);
+                customer.getLoan().setLoanselfcurrent(leftoverLoan);
+                if (customer.getStatus() != null) {
+                    customer.getStatus().setLoanExceedAmount(leftoverLoan);
+                }
+            } else {
+                customer.getLoan().setLoanselfsum(0L);
+                customer.getLoan().setLoanselfcurrent(0L);
+                if (customer.getStatus() != null) {
+                    customer.getStatus().setLoanExceedAmount(0L);
+                }
+            }
+        }
         updateStatusFields(customer);
     }
 
-    // 아래 누락되었던 메서드들을 추가합니다.
+    // 기존 대출/자납 적용 메서드를 수정하여 전체 재계산 방식으로 처리
+    public void applyLoanPayment(Customer customer) {
+        recalculatePaymentDistribution(customer);
+    }
 
-    /**
-     * 정계약한(customertype = 'c') 고객의 수 반환
-     */
+    /** 정계약한(customertype = 'c') 고객의 수 반환 */
     public long countContractedCustomers() {
         return customerRepository.countByCustomertype("c");
     }
 
-    /**
-     * 미납이 아닌(모든 예정금액 납부완료 또는 예정일이 아직 지나지 않은) 고객 수 반환
-     */
+    /** 미납이 아닌(모든 예정금액 납부완료 또는 예정일이 아직 지나지 않은) 고객 수 반환 */
     public long countFullyPaidOrNotOverdueCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
         LocalDate today = LocalDate.now();
@@ -236,9 +271,7 @@ public class CustomerService {
         }).count();
     }
 
-    /**
-     * 연체료 정보를 가져오는 메서드
-     */
+    /** 연체료 정보를 가져오는 메서드 */
     public List<LateFeeInfo> getLateFeeInfos(String name, String number) {
         List<Customer> customers;
         if (name != null && !name.isEmpty() && number != null && !number.isEmpty()) {
@@ -316,8 +349,6 @@ public class CustomerService {
         }
         return lateFeeInfos;
     }
-
-    // 나머지 기존 메서드들
 
     public List<Customer> searchCustomers(String name, String number) {
         if (name != null && number != null) {

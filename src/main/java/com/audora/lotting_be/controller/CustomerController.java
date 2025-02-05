@@ -1,15 +1,12 @@
-// CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
-import com.audora.lotting_be.model.customer.minor.Loan;
 import com.audora.lotting_be.model.customer.Phase;
-import com.audora.lotting_be.payload.response.CustomerDepositDTO;
+import com.audora.lotting_be.model.customer.minor.Loan;
 import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,7 +36,6 @@ public class CustomerController {
         } else {
             System.out.println("Deposits is null");
         }
-
         Customer createdCustomer = customerService.createCustomer(customer);
         return ResponseEntity.ok(createdCustomer);
     }
@@ -100,42 +96,37 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}/loan")
-    public ResponseEntity<Loan> getLoanByCustomerId(@PathVariable Integer id) {
-        Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomerById(id));
-        if (!optionalCustomer.isPresent()) {
+    public ResponseEntity<?> getLoanByCustomerId(@PathVariable Integer id) {
+        Customer customer = customerService.getCustomerById(id);
+        if (customer == null) {
             return ResponseEntity.notFound().build();
         }
-
-        Loan loan = optionalCustomer.get().getLoan();
-        return ResponseEntity.ok(loan);
+        return ResponseEntity.ok(customer.getLoan());
     }
 
+    // ★ 수정된 대출/자납 업데이트 엔드포인트 ★
     @PutMapping("/{id}/loan")
     public ResponseEntity<Customer> updateLoanByCustomerId(@PathVariable Integer id, @RequestBody Loan updatedLoan) {
-        Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomerById(id));
-        if (!optionalCustomer.isPresent()) {
+        Customer customer = customerService.getCustomerById(id);
+        if (customer == null) {
             return ResponseEntity.notFound().build();
         }
-
-        Customer customer = optionalCustomer.get();
+        // 기존 Loan 정보 가져오기; 없으면 새로 생성
         Loan loan = customer.getLoan();
         if (loan == null) {
             loan = new Loan();
         }
-
+        // 요청으로 받은 대출/자납 정보 업데이트
         loan.setLoandate(updatedLoan.getLoandate());
         loan.setLoanbank(updatedLoan.getLoanbank());
         loan.setLoanammount(updatedLoan.getLoanammount());
         loan.setSelfdate(updatedLoan.getSelfdate());
         loan.setSelfammount(updatedLoan.getSelfammount());
-        // 기존에 전달받은 loanselfsum, loanselfcurrent는 무시하고, 새로 분배 후 계산하도록 함
-
         customer.setLoan(loan);
 
-        // [수정 3] 대출/자납 데이터를 Phase에 분배하고, 초과된 금액은 Status.loanExceedAmount에 저장
-        customerService.applyLoanPayment(customer);
+        // 전체 분배 재계산: 예약금와 대출/자납 모두 반영하여 Phase 분배를 초기화 후 재계산
+        customerService.recalculatePaymentDistribution(customer);
         customerService.saveCustomer(customer);
-
         return ResponseEntity.ok(customer);
     }
 
@@ -143,19 +134,16 @@ public class CustomerController {
     public ResponseEntity<?> cancelCustomer(@PathVariable Integer id) {
         Customer customer = customerService.getCustomerById(id);
         if (customer == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(404)
                     .body(new MessageResponse("Error: Customer not found."));
         }
-
         customer.setCustomertype("x");
         customerService.saveCustomer(customer);
-
         return ResponseEntity.ok(new MessageResponse("Customer cancelled successfully."));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
-        // (기존 updateCustomer 로직 그대로)
         System.out.println("========== Updated Customer JSON Data ==========");
         System.out.println(updatedCustomer);
         if (updatedCustomer.getAttachments() != null) {
@@ -199,6 +187,7 @@ public class CustomerController {
         existingCustomer.getFinancial().setAccountnum(updatedCustomer.getFinancial().getAccountnum());
         existingCustomer.getFinancial().setAccountholder(updatedCustomer.getFinancial().getAccountholder());
 
+        // 예약금(deposit) 필드 업데이트
         existingCustomer.getDeposits().setDepositdate(updatedCustomer.getDeposits().getDepositdate());
         existingCustomer.getDeposits().setDepositammount(updatedCustomer.getDeposits().getDepositammount());
 
@@ -231,6 +220,9 @@ public class CustomerController {
         existingCustomer.getAttachments().setPrizename(updatedCustomer.getAttachments().getPrizename());
         existingCustomer.getAttachments().setPrizedate(updatedCustomer.getAttachments().getPrizedate());
 
+        // 예약금이나 대출/자납액 수정 시 전체 분배 재계산 (phase의 기존 분배 내역 초기화 후 재분배)
+        customerService.recalculatePaymentDistribution(existingCustomer);
+
         customerService.saveCustomer(existingCustomer);
 
         return ResponseEntity.ok(existingCustomer);
@@ -247,8 +239,4 @@ public class CustomerController {
         long count = customerService.countFullyPaidOrNotOverdueCustomers();
         return ResponseEntity.ok(count);
     }
-
-
-
-    // 이하 DepositHistoryController, FeeController, FileController, LateFeesController, PhaseController 등은 기존 코드와 동일...
 }

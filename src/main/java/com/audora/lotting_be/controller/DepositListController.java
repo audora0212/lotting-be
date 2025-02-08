@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/depositlist")
+@RequestMapping("/depositlist") //입금 여부 한눈에 보는 페이지 전용
 public class DepositListController {
 
     private final CustomerService customerService;

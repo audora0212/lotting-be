@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/customers")
@@ -63,8 +63,8 @@ public class CustomerController {
     @GetMapping("/search")
     public ResponseEntity<List<Customer>> searchCustomers(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String number) {
-
+            @RequestParam(required = false) String number
+    ) {
         List<Customer> customers = customerService.searchCustomers(name, number);
         return ResponseEntity.ok(customers);
     }
@@ -104,19 +104,23 @@ public class CustomerController {
         return ResponseEntity.ok(customer.getLoan());
     }
 
-    // ★ 수정된 대출/자납 업데이트 엔드포인트 ★
+    /**
+     * [수정됨] 대출/자납 업데이트:
+     * 1) Loan 필드 업데이트
+     * 2) customerService.saveCustomer(...)
+     * 3) customerService.recalculateEverything(...)
+     */
     @PutMapping("/{id}/loan")
     public ResponseEntity<Customer> updateLoanByCustomerId(@PathVariable Integer id, @RequestBody Loan updatedLoan) {
         Customer customer = customerService.getCustomerById(id);
         if (customer == null) {
             return ResponseEntity.notFound().build();
         }
-        // 기존 Loan 정보 가져오기; 없으면 새로 생성
+
         Loan loan = customer.getLoan();
         if (loan == null) {
             loan = new Loan();
         }
-        // 요청으로 받은 대출/자납 정보 업데이트
         loan.setLoandate(updatedLoan.getLoandate());
         loan.setLoanbank(updatedLoan.getLoanbank());
         loan.setLoanammount(updatedLoan.getLoanammount());
@@ -124,9 +128,11 @@ public class CustomerController {
         loan.setSelfammount(updatedLoan.getSelfammount());
         customer.setLoan(loan);
 
-        // 전체 분배 재계산: 예약금와 대출/자납 모두 반영하여 Phase 분배를 초기화 후 재계산
-        customerService.recalculatePaymentDistribution(customer);
+        // 우선 저장
         customerService.saveCustomer(customer);
+        // 전체 재계산
+        customerService.recalculateEverything(customer);
+
         return ResponseEntity.ok(customer);
     }
 
@@ -142,6 +148,11 @@ public class CustomerController {
         return ResponseEntity.ok(new MessageResponse("Customer cancelled successfully."));
     }
 
+    /**
+     * [수정됨] Customer 전체 업데이트:
+     * - 기존 필드 갱신 후 save
+     * - 곧바로 recalculateEverything
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
         System.out.println("========== Updated Customer JSON Data ==========");
@@ -187,7 +198,7 @@ public class CustomerController {
         existingCustomer.getFinancial().setAccountnum(updatedCustomer.getFinancial().getAccountnum());
         existingCustomer.getFinancial().setAccountholder(updatedCustomer.getFinancial().getAccountholder());
 
-        // 예약금(deposit) 필드 업데이트
+        // 예약금(deposit)
         existingCustomer.getDeposits().setDepositdate(updatedCustomer.getDeposits().getDepositdate());
         existingCustomer.getDeposits().setDepositammount(updatedCustomer.getDeposits().getDepositammount());
 
@@ -215,15 +226,14 @@ public class CustomerController {
         existingCustomer.getAttachments().setInvestmentfile(updatedCustomer.getAttachments().getInvestmentfile());
         existingCustomer.getAttachments().setContract(updatedCustomer.getAttachments().getContract());
         existingCustomer.getAttachments().setFileinfo(updatedCustomer.getAttachments().getFileinfo());
-
-        // 새로 추가된 필드도 설정
+        // 새로 추가된 필드
         existingCustomer.getAttachments().setPrizename(updatedCustomer.getAttachments().getPrizename());
         existingCustomer.getAttachments().setPrizedate(updatedCustomer.getAttachments().getPrizedate());
 
-        // 예약금이나 대출/자납액 수정 시 전체 분배 재계산 (phase의 기존 분배 내역 초기화 후 재분배)
-        customerService.recalculatePaymentDistribution(existingCustomer);
-
+        // 먼저 저장
         customerService.saveCustomer(existingCustomer);
+        // 바로 전체 재계산
+        customerService.recalculateEverything(existingCustomer);
 
         return ResponseEntity.ok(existingCustomer);
     }

@@ -3,6 +3,7 @@ package com.audora.lotting_be.service;
 import com.audora.lotting_be.model.Fee.Fee;
 import com.audora.lotting_be.model.Fee.FeePerPhase;
 import com.audora.lotting_be.model.customer.Customer;
+import com.audora.lotting_be.model.customer.DepositHistory;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Status;
 import com.audora.lotting_be.payload.response.CustomerDepositDTO;
@@ -28,23 +29,19 @@ public class CustomerService {
     @Autowired
     private FeeRepository feeRepository;
 
-    // 고객 ID 생성
-    public Integer getNextCustomerId() {
-        return customerRepository.getNextId();
-    }
-
-    // 고객 조회
-    public Customer getCustomerById(Integer id) {
-        Optional<Customer> optionalCustomer = customerRepository.findById(id);
-        return optionalCustomer.orElse(null);
-    }
-
-    // 신규 고객 생성 시 Fee 조회 및 Phase 초기화 후 전체 분배 재계산
+    // ======================== 1) 고객 생성 및 초기 Phase 설정 ========================
+    /**
+     * 고객을 새로 생성할 때,
+     * - Fee 테이블에서 (군+타입+가입차순)에 해당하는 Fee를 찾아 Phase를 초기화
+     * - Status도 생성(없다면)
+     * - DB 저장 후, 예약금/입금내역/대출/자납 등 "전체" 재계산
+     */
     public Customer createCustomer(Customer customer) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
         }
-        // Fee 조회 및 Phase 초기화
+
+        // Fee 조회
         Fee fee = feeRepository.findByGroupnameAndBatch(
                 customer.getType() + customer.getGroupname(),
                 customer.getBatch()
@@ -52,21 +49,19 @@ public class CustomerService {
         if (fee != null) {
             List<FeePerPhase> feePerPhases = fee.getFeePerPhases();
             List<Phase> phases = new ArrayList<>();
-            for (FeePerPhase feePerPhase : feePerPhases) {
+            for (FeePerPhase fpp : feePerPhases) {
                 Phase phase = new Phase();
-                phase.setPhaseNumber(feePerPhase.getPhaseNumber());
-                Long charge = feePerPhase.getPhasefee();
+                phase.setPhaseNumber(fpp.getPhaseNumber());
+                long charge = (fpp.getPhasefee() != null) ? fpp.getPhasefee() : 0L;
                 phase.setCharge(charge);
-                Long service = 0L;
-                Long exemption = 0L;
-                phase.setService(service);
-                phase.setExemption(exemption);
-                Long feesum = charge + service - exemption;
+                phase.setService(0L);
+                phase.setExemption(0L);
+                long feesum = charge; // + service - exemption
                 phase.setFeesum(feesum);
                 phase.setCharged(0L);
                 phase.setSum(feesum);
-                phase.setPlanneddateString(feePerPhase.getPhasedate());
-                LocalDate plannedDate = calculatePlannedDate(customer.getRegisterdate(), feePerPhase.getPhasedate());
+                phase.setPlanneddateString(fpp.getPhasedate());
+                LocalDate plannedDate = calculatePlannedDate(customer.getRegisterdate(), fpp.getPhasedate());
                 phase.setPlanneddate(plannedDate);
                 phase.setFullpaiddate(null);
                 phase.setCustomer(customer);
@@ -74,108 +69,158 @@ public class CustomerService {
             }
             customer.setPhases(phases);
         }
+
         if (customer.getStatus() == null) {
             Status status = new Status();
             status.setCustomer(customer);
             customer.setStatus(status);
         }
-        // 전체 분배 재계산(예약금 및 대출/자납액)
-        recalculatePaymentDistribution(customer);
-        updateStatusFields(customer);
-        return customerRepository.save(customer);
+
+        // 먼저 DB에 저장 (Cascade로 Phase, Status도 함께)
+        customer = customerRepository.save(customer);
+
+        // [핵심] 전체 분배 재계산
+        recalculateEverything(customer);
+
+        return customer;
     }
 
-    // phasedate 계산: phasedate 문자열에 따라 등록일에 offset을 적용
-    private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
-        if (phasedate == null || phasedate.isEmpty()) {
-            return registerDate;
-        }
-        if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {
-            int months = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
-            return registerDate.plusMonths(months);
-        } else if (phasedate.endsWith("년")) {
-            int years = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
-            return registerDate.plusYears(years);
-        } else {
-            return registerDate.plusYears(100);
-        }
-    }
+    // ======================== 2) "전체 재계산" 로직  ========================
+    /**
+     * (a) 모든 Phase의 charged/feesum 초기화
+     * (b) 예약금 -> distributePaymentToPhases
+     * (c) 모든 입금내역 -> distributePaymentToPhases
+     * (d) 대출/자납 -> distributePaymentToPhases
+     * (e) leftover(초과분)을 status.exceedamount / loanExceedAmount 에 기록
+     * (f) updateStatusFields 로 unpaidammout 등 갱신
+     * (g) DB 저장
+     */
+    public void recalculateEverything(Customer customer) {
+        // 1) Phase 초기화
+        if (customer.getPhases() != null) {
+            for (Phase phase : customer.getPhases()) {
+                phase.setCharged(0L);
+                phase.setFullpaiddate(null);
 
-    // 각 Phase의 납입액(charged) 및 잔액(sum)을 업데이트
-    public void updateStatusFields(Customer customer) {
-        List<Phase> phases = customer.getPhases();
-        if (phases != null) {
-            for (Phase phase : phases) {
-                long charge = phase.getCharge() != null ? phase.getCharge() : 0L;
-                long service = phase.getService() != null ? phase.getService() : 0L;
-                long exemption = phase.getExemption() != null ? phase.getExemption() : 0L;
+                long charge = (phase.getCharge() != null) ? phase.getCharge() : 0L;
+                long service = (phase.getService() != null) ? phase.getService() : 0L;
+                long exemption = (phase.getExemption() != null) ? phase.getExemption() : 0L;
                 long feesum = charge + service - exemption;
                 phase.setFeesum(feesum);
-                long charged = phase.getCharged() != null ? phase.getCharged() : 0L;
-                long sum = feesum - charged;
-                phase.setSum(sum);
+                phase.setSum(feesum);
             }
         }
-        Status status = customer.getStatus();
-        if (status == null) {
-            status = new Status();
-            status.setCustomer(customer);
-            customer.setStatus(status);
+
+        // 2) 예약금 분배
+        long depositLeftover = 0L;
+        if (customer.getDeposits() != null
+                && customer.getDeposits().getDepositammount() != null
+                && customer.getDeposits().getDepositammount() > 0) {
+
+            long depositAmount = customer.getDeposits().getDepositammount();
+            LocalDate depositDate = (customer.getDeposits().getDepositdate() != null)
+                    ? customer.getDeposits().getDepositdate()
+                    : customer.getRegisterdate(); // 없는 경우 가입일자 기준
+
+            depositLeftover = distributePaymentToPhases(customer, depositAmount, depositDate);
         }
-        long exemptionsum = phases != null ? phases.stream()
-                .mapToLong(p -> p.getExemption() != null ? p.getExemption() : 0L)
-                .sum() : 0L;
-        status.setExemptionsum(exemptionsum);
-        long unpaidammout = phases != null ? phases.stream()
-                .mapToLong(p -> p.getSum() != null ? p.getSum() : 0L)
-                .sum() : 0L;
-        status.setUnpaidammout(unpaidammout);
-        List<Integer> unpaidPhaseNumbers = phases != null ? phases.stream()
-                .filter(p -> p.getPlanneddate() != null &&
-                        p.getPlanneddate().isBefore(LocalDate.now()) &&
-                        p.getFullpaiddate() == null)
-                .map(Phase::getPhaseNumber)
-                .sorted()
-                .collect(Collectors.toList()) : new ArrayList<>();
-        String unpaidPhaseStr = unpaidPhaseNumbers.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-        status.setUnpaidphase(unpaidPhaseStr);
-        long ammountsum = phases != null ? phases.stream()
-                .mapToLong(p -> p.getFeesum() != null ? p.getFeesum() : 0L)
-                .sum() : 0L;
-        status.setAmmountsum(ammountsum);
-        status.setPercent40((long) (ammountsum * 0.4));
-        if (status.getExceedamount() == null) {
-            status.setExceedamount(0L);
+
+        // 3) 입금내역(DepositHistory) 분배
+        long depositHistLeftoverTotal = 0L;
+        List<DepositHistory> histories = customer.getDepositHistories();
+        if (histories != null && !histories.isEmpty()) {
+            // 거래일시 오름차순
+            histories.sort(Comparator.comparing(DepositHistory::getTransactionDateTime));
+            for (DepositHistory dh : histories) {
+                long amount = (dh.getDepositAmount() != null) ? dh.getDepositAmount() : 0L;
+                LocalDate txDate = (dh.getTransactionDateTime() != null)
+                        ? dh.getTransactionDateTime().toLocalDate()
+                        : customer.getRegisterdate();
+                long leftover = distributePaymentToPhases(customer, amount, txDate);
+                depositHistLeftoverTotal += leftover;
+            }
         }
-        if (status.getLoanExceedAmount() == null) {
-            status.setLoanExceedAmount(0L);
+
+        // 4) 대출 + 자납 분배
+        long loanExceed = 0L; // 대출 leftover
+        if (customer.getLoan() != null) {
+            long loanAmount = (customer.getLoan().getLoanammount() != null)
+                    ? customer.getLoan().getLoanammount() : 0L;
+            long selfAmount = (customer.getLoan().getSelfammount() != null)
+                    ? customer.getLoan().getSelfammount() : 0L;
+            long totalLoan = loanAmount + selfAmount;
+
+            if (totalLoan > 0) {
+                LocalDate loanDate = null;
+                if (customer.getLoan().getLoandate() != null) {
+                    loanDate = customer.getLoan().getLoandate();
+                } else if (customer.getLoan().getSelfdate() != null) {
+                    loanDate = customer.getLoan().getSelfdate();
+                } else {
+                    loanDate = customer.getRegisterdate();
+                }
+
+                loanExceed = distributePaymentToPhases(customer, totalLoan, loanDate);
+
+                // Loan 엔티티 내부 계산
+                customer.getLoan().setLoanselfsum(totalLoan - loanExceed);
+                customer.getLoan().setLoanselfcurrent(loanExceed);
+            } else {
+                customer.getLoan().setLoanselfsum(0L);
+                customer.getLoan().setLoanselfcurrent(0L);
+            }
         }
-        customer.setStatus(status);
+
+        // 5) leftover를 status에 기록
+        long depositAndHistoryLeftover = depositLeftover + depositHistLeftoverTotal;
+        Status st = customer.getStatus();
+        if (st == null) {
+            st = new Status();
+            st.setCustomer(customer);
+            customer.setStatus(st);
+        }
+        st.setExceedamount(depositAndHistoryLeftover);
+        st.setLoanExceedAmount(loanExceed);
+
+        // 6) 나머지 상태필드(unpaidammout, ammountsum 등) 업데이트
+        updateStatusFields(customer);
+
+        // 7) 최종 DB 저장
+        customerRepository.save(customer);
     }
 
     /**
-     * [공용 메서드] 지정한 paymentAmount를 고객의 Phase들에 순차적으로 분배하고 남은 금액을 반환합니다.
-     * 이 메서드는 현재 phase에 이미 적용된 납입액 위에 추가하는 형태로 동작합니다.
+     * 특정 금액(paymentAmount)을 고객의 Phase에 '순서대로' 납부하는 메서드
+     * leftover(초과분)를 반환한다.
      */
     public long distributePaymentToPhases(Customer customer, long paymentAmount, LocalDate paymentDate) {
         List<Phase> phases = customer.getPhases();
-        if (phases == null) return paymentAmount;
+        if (phases == null || phases.isEmpty()) {
+            return paymentAmount;
+        }
+        // 차수 순 정렬
         phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
+
         long remaining = paymentAmount;
         for (Phase phase : phases) {
-            long already = phase.getCharged() != null ? phase.getCharged() : 0;
-            long required = (phase.getFeesum() != null ? phase.getFeesum() : 0) - already;
-            if (required <= 0) continue;
+            long already = (phase.getCharged() != null) ? phase.getCharged() : 0L;
+            long required = ((phase.getFeesum() != null) ? phase.getFeesum() : 0L) - already;
+            if (required <= 0) {
+                // 이미 완납
+                continue;
+            }
             if (remaining >= required) {
+                // 전액 납부
                 phase.setCharged(already + required);
-                remaining -= required;
+                phase.setSum(phase.getFeesum() - phase.getCharged());
                 if (phase.getFullpaiddate() == null) {
                     phase.setFullpaiddate(paymentDate);
                 }
+                remaining -= required;
             } else {
+                // 일부만 납부
                 phase.setCharged(already + remaining);
+                phase.setSum(phase.getFeesum() - phase.getCharged());
                 remaining = 0;
                 break;
             }
@@ -184,79 +229,108 @@ public class CustomerService {
     }
 
     /**
-     * ★ 전체 분배 재계산 메서드 ★
-     * 고객의 모든 Phase의 납입액을 0으로 초기화한 후,
-     * 예약금(Deposit)과 대출/자납액(Loan)을 순차적으로 분배하여, 최신 분배 내역을 계산합니다.
-     *
-     * 이 메서드를 호출하면 기존 phase 분배 내역(예를 들어, 처음 5천만원 분배된 내역)을 모두 리셋한 뒤,
-     * 업데이트된 예약금 값(예: 5백만원 또는 7천만원)과 대출/자납액을 반영하여 다시 분배합니다.
+     * Phase에 따라 unpaidammout, unpaidphase, 등 Status 필드를 갱신
      */
-    public void recalculatePaymentDistribution(Customer customer) {
-        // 1. 기존 분배 내역 초기화: 모든 phase의 charged 값을 0, fullpaiddate 초기화
-        if (customer.getPhases() != null) {
-            for (Phase phase : customer.getPhases()) {
-                phase.setCharged(0L);
-                phase.setFullpaiddate(null);
-                long charge = phase.getCharge() != null ? phase.getCharge() : 0L;
-                long service = phase.getService() != null ? phase.getService() : 0L;
-                long exemption = phase.getExemption() != null ? phase.getExemption() : 0L;
-                long feesum = charge + service - exemption;
-                phase.setFeesum(feesum);
-                phase.setSum(feesum);
-            }
+    public void updateStatusFields(Customer customer) {
+        List<Phase> phases = customer.getPhases();
+        Status status = customer.getStatus();
+        if (status == null) {
+            status = new Status();
+            status.setCustomer(customer);
+            customer.setStatus(status);
         }
-        // 2. 예약금 분배 적용
-        long depositAmount = 0;
-        LocalDate depositDate = customer.getRegisterdate();
-        if (customer.getDeposits() != null && customer.getDeposits().getDepositammount() != null) {
-            depositAmount = customer.getDeposits().getDepositammount();
-            if (customer.getDeposits().getDepositdate() != null) {
-                depositDate = customer.getDeposits().getDepositdate();
-            }
+        if (phases != null) {
+            long exemptionsum = phases.stream()
+                    .mapToLong(p -> (p.getExemption() != null) ? p.getExemption() : 0L)
+                    .sum();
+            status.setExemptionsum(exemptionsum);
+
+            long unpaidAmmout = phases.stream()
+                    .mapToLong(p -> (p.getSum() != null) ? p.getSum() : 0L)
+                    .sum();
+            status.setUnpaidammout(unpaidAmmout);
+
+            // 지금 시점에서 '예정일 지났는데 아직 완납 안 된' 차수
+            LocalDate today = LocalDate.now();
+            List<Integer> unpaidPhases = phases.stream()
+                    .filter(p -> p.getPlanneddate() != null
+                            && p.getPlanneddate().isBefore(today)
+                            && p.getFullpaiddate() == null)
+                    .map(Phase::getPhaseNumber)
+                    .sorted()
+                    .collect(Collectors.toList());
+            String unpaidPhaseStr = unpaidPhases.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+            status.setUnpaidphase(unpaidPhaseStr);
+
+            long ammountsum = phases.stream()
+                    .mapToLong(p -> (p.getFeesum() != null) ? p.getFeesum() : 0L)
+                    .sum();
+            status.setAmmountsum(ammountsum);
+
+            status.setPercent40((long) (ammountsum * 0.4));
+            // exceedamount, loanExceedAmount는 recalcEverything에서 셋팅
         }
-        long leftoverDeposit = 0;
-        if (depositAmount > 0) {
-            leftoverDeposit = distributePaymentToPhases(customer, depositAmount, depositDate);
-        }
-        if (customer.getStatus() != null) {
-            customer.getStatus().setExceedamount(leftoverDeposit);
-        }
-        // 3. 대출/자납액 분배 적용
-        long totalLoanPayment = 0;
-        if (customer.getLoan() != null) {
-            long loanAmount = customer.getLoan().getLoanammount() != null ? customer.getLoan().getLoanammount() : 0;
-            long selfAmount = customer.getLoan().getSelfammount() != null ? customer.getLoan().getSelfammount() : 0;
-            totalLoanPayment = loanAmount + selfAmount;
-            if (totalLoanPayment > 0) {
-                LocalDate loanDate = customer.getLoan().getLoandate() != null ? customer.getLoan().getLoandate() : customer.getRegisterdate();
-                long leftoverLoan = distributePaymentToPhases(customer, totalLoanPayment, loanDate);
-                customer.getLoan().setLoanselfsum(totalLoanPayment - leftoverLoan);
-                customer.getLoan().setLoanselfcurrent(leftoverLoan);
-                if (customer.getStatus() != null) {
-                    customer.getStatus().setLoanExceedAmount(leftoverLoan);
-                }
-            } else {
-                customer.getLoan().setLoanselfsum(0L);
-                customer.getLoan().setLoanselfcurrent(0L);
-                if (customer.getStatus() != null) {
-                    customer.getStatus().setLoanExceedAmount(0L);
-                }
-            }
-        }
-        updateStatusFields(customer);
     }
 
-    // 기존 대출/자납 적용 메서드를 수정하여 전체 재계산 방식으로 처리
-    public void applyLoanPayment(Customer customer) {
-        recalculatePaymentDistribution(customer);
+    // ======================== 3) 그 외 메서드 (검색, 조회, 삭제 등) ========================
+
+    public Integer getNextCustomerId() {
+        return customerRepository.getNextId();
     }
 
-    /** 정계약한(customertype = 'c') 고객의 수 반환 */
+    public Customer getCustomerById(Integer id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
+        return optionalCustomer.orElse(null);
+    }
+
+    public Customer saveCustomer(Customer customer) {
+        return customerRepository.save(customer);
+    }
+
+    public boolean cancelCustomer(Integer id) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(id);
+        if (optionalCustomer.isPresent()) {
+            Customer customer = optionalCustomer.get();
+            customer.setCustomertype("c");
+            customerRepository.save(customer);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public List<Phase> getPendingPhases(Integer customerId) {
+        Optional<Customer> customerOptional = customerRepository.findById(customerId);
+        if (customerOptional.isPresent()) {
+            Customer customer = customerOptional.get();
+            List<Phase> phases = customer.getPhases();
+            return phases.stream()
+                    .filter(phase -> phase.getSum() != null && phase.getSum() > 0)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
+    public List<Phase> getCompletedPhases(Integer customerId) {
+        Optional<Customer> customerOptional = customerRepository.findById(customerId);
+        if (customerOptional.isPresent()) {
+            Customer customer = customerOptional.get();
+            List<Phase> phases = customer.getPhases();
+            return phases.stream()
+                    .filter(phase -> phase.getSum() == null || phase.getSum() == 0)
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
+    }
+
     public long countContractedCustomers() {
         return customerRepository.countByCustomertype("c");
     }
 
-    /** 미납이 아닌(모든 예정금액 납부완료 또는 예정일이 아직 지나지 않은) 고객 수 반환 */
     public long countFullyPaidOrNotOverdueCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
         LocalDate today = LocalDate.now();
@@ -266,12 +340,12 @@ public class CustomerService {
             boolean hasOverdue = phases.stream().anyMatch(phase ->
                     phase.getPlanneddate() != null &&
                             phase.getPlanneddate().isBefore(today) &&
-                            phase.getFullpaiddate() == null);
+                            phase.getFullpaiddate() == null
+            );
             return !hasOverdue;
         }).count();
     }
 
-    /** 연체료 정보를 가져오는 메서드 */
     public List<LateFeeInfo> getLateFeeInfos(String name, String number) {
         List<Customer> customers;
         if (name != null && !name.isEmpty() && number != null && !number.isEmpty()) {
@@ -297,21 +371,25 @@ public class CustomerService {
         }
         List<LateFeeInfo> lateFeeInfos = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        for (Customer customer : customers) {
-            List<Phase> phases = customer.getPhases();
+
+        for (Customer c : customers) {
+            List<Phase> phases = c.getPhases();
             if (phases == null || phases.isEmpty()) continue;
             List<Phase> unpaidPhases = phases.stream().filter(phase ->
                     phase.getPlanneddate() != null &&
                             phase.getPlanneddate().isBefore(today) &&
                             phase.getFullpaiddate() == null
             ).collect(Collectors.toList());
+
             LateFeeInfo info = new LateFeeInfo();
-            info.setId(customer.getId());
-            info.setCustomertype(customer.getCustomertype() != null ? customer.getCustomertype() : "N/A");
-            info.setName(customer.getCustomerData() != null && customer.getCustomerData().getName() != null
-                    ? customer.getCustomerData().getName() : "N/A");
-            info.setRegisterdate(customer.getRegisterdate());
+            info.setId(c.getId());
+            info.setCustomertype(c.getCustomertype() != null ? c.getCustomertype() : "N/A");
+            info.setName((c.getCustomerData() != null && c.getCustomerData().getName() != null)
+                    ? c.getCustomerData().getName() : "N/A");
+            info.setRegisterdate(c.getRegisterdate());
+
             if (unpaidPhases.isEmpty()) {
+                // 미납 차수 없음
                 info.setLastUnpaidPhaseNumber(null);
                 info.setLateBaseDate(null);
                 info.setRecentPaymentDate(null);
@@ -324,29 +402,41 @@ public class CustomerService {
                 info.setTotalOwed(0L);
                 lateFeeInfos.add(info);
             } else {
-                int lastUnpaidPhaseNumber = unpaidPhases.stream().mapToInt(Phase::getPhaseNumber).max().orElse(0);
-                info.setLastUnpaidPhaseNumber(lastUnpaidPhaseNumber);
+                // 미납 존재
+                int lastUnpaid = unpaidPhases.stream().mapToInt(Phase::getPhaseNumber).max().orElse(0);
+                info.setLastUnpaidPhaseNumber(lastUnpaid);
                 LocalDate lateBaseDate = unpaidPhases.stream().map(Phase::getPlanneddate).min(LocalDate::compareTo).orElse(null);
                 info.setLateBaseDate(lateBaseDate);
+
                 List<Phase> paidPhases = phases.stream().filter(p -> p.getFullpaiddate() != null).collect(Collectors.toList());
                 LocalDate recentPaymentDate = paidPhases.stream().map(Phase::getFullpaiddate).max(LocalDate::compareTo).orElse(null);
                 info.setRecentPaymentDate(recentPaymentDate);
-                long daysOverdue = lateBaseDate != null ? ChronoUnit.DAYS.between(lateBaseDate, today) : 0;
+
+                long daysOverdue = (lateBaseDate != null) ? ChronoUnit.DAYS.between(lateBaseDate, today) : 0;
                 if (daysOverdue < 0) daysOverdue = 0;
                 info.setDaysOverdue(daysOverdue);
+
                 double lateRate = 0.0005;
                 info.setLateRate(lateRate);
-                long overdueAmount = unpaidPhases.stream().mapToLong(p -> p.getFeesum() != null ? p.getFeesum() : 0L).sum();
+
+                long overdueAmount = unpaidPhases.stream()
+                        .mapToLong(p -> (p.getFeesum() != null) ? p.getFeesum() : 0L)
+                        .sum();
                 info.setOverdueAmount(overdueAmount);
+
                 long paidAmount = phases.stream().mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L).sum();
                 info.setPaidAmount(paidAmount);
+
                 double lateFee = overdueAmount * lateRate * daysOverdue;
                 info.setLateFee(lateFee);
+
                 long totalOwed = overdueAmount + Math.round(lateFee);
                 info.setTotalOwed(totalOwed);
+
                 lateFeeInfos.add(info);
             }
         }
+
         return lateFeeInfos;
     }
 
@@ -370,48 +460,6 @@ public class CustomerService {
         }
     }
 
-    public void deleteCustomer(Integer id) {
-        customerRepository.deleteById(id);
-    }
-
-    public List<Phase> getPendingPhases(Integer customerId) {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        if (customerOptional.isPresent()) {
-            Customer customer = customerOptional.get();
-            List<Phase> phases = customer.getPhases();
-            return phases.stream().filter(phase -> phase.getSum() != null && phase.getSum() > 0).collect(Collectors.toList());
-        } else {
-            return null;
-        }
-    }
-
-    public List<Phase> getCompletedPhases(Integer customerId) {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        if (customerOptional.isPresent()) {
-            Customer customer = customerOptional.get();
-            List<Phase> phases = customer.getPhases();
-            return phases.stream().filter(phase -> phase.getSum() == null || phase.getSum() == 0).collect(Collectors.toList());
-        } else {
-            return null;
-        }
-    }
-
-    public Customer saveCustomer(Customer customer) {
-        return customerRepository.save(customer);
-    }
-
-    public boolean cancelCustomer(Integer id) {
-        Optional<Customer> optionalCustomer = customerRepository.findById(id);
-        if (optionalCustomer.isPresent()) {
-            Customer customer = optionalCustomer.get();
-            customer.setCustomertype("c");
-            customerRepository.save(customer);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public List<CustomerDepositDTO> getAllCustomerDepositDTOs() {
         List<Customer> allCustomers = customerRepository.findAll();
         return allCustomers.stream().map(this::mapToCustomerDepositDTO).collect(Collectors.toList());
@@ -420,12 +468,18 @@ public class CustomerService {
     private CustomerDepositDTO mapToCustomerDepositDTO(Customer customer) {
         CustomerDepositDTO dto = new CustomerDepositDTO();
         dto.setMemberNumber(customer.getId());
-        LocalDate lastPaidDate = customer.getPhases().stream().map(Phase::getFullpaiddate).filter(Objects::nonNull).max(LocalDate::compareTo).orElse(null);
+
+        LocalDate lastPaidDate = customer.getPhases().stream()
+                .map(Phase::getFullpaiddate)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
         if (lastPaidDate != null) {
             dto.setLastTransactionDateTime(lastPaidDate.atStartOfDay());
         } else {
             dto.setLastTransactionDateTime(null);
         }
+
         dto.setRemarks("");
         dto.setMemo("");
         if (customer.getCustomerData() != null) {
@@ -434,8 +488,12 @@ public class CustomerService {
             dto.setContractor("");
         }
         dto.setWithdrawnAmount(null);
-        Long depositAmount = customer.getPhases().stream().mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L).sum();
+
+        Long depositAmount = customer.getPhases().stream()
+                .mapToLong(p -> p.getCharged() != null ? p.getCharged() : 0L)
+                .sum();
         dto.setDepositAmount(depositAmount);
+
         if (customer.getFinancial() != null && customer.getFinancial().getBankname() != null) {
             dto.setBankBranch(customer.getFinancial().getBankname());
         } else {
@@ -443,6 +501,7 @@ public class CustomerService {
         }
         dto.setAccount("h");
         dto.setReservation("");
+
         dto.setDepositPhase1(getPhaseStatus(customer, 1));
         dto.setDepositPhase2(getPhaseStatus(customer, 2));
         dto.setDepositPhase3(getPhaseStatus(customer, 3));
@@ -453,6 +512,7 @@ public class CustomerService {
         dto.setDepositPhase8(getPhaseStatus(customer, 8));
         dto.setDepositPhase9(getPhaseStatus(customer, 9));
         dto.setDepositPhase10(getPhaseStatus(customer, 10));
+
         if (customer.getLoan() != null) {
             dto.setLoanAmount(customer.getLoan().getLoanammount());
             dto.setLoanDate(customer.getLoan().getLoandate());
@@ -460,6 +520,7 @@ public class CustomerService {
             dto.setLoanAmount(null);
             dto.setLoanDate(null);
         }
+
         dto.setTemporary("");
         dto.setNote("");
         return dto;
@@ -475,5 +536,28 @@ public class CustomerService {
         }
         Long charged = targetPhase.getCharged();
         return (charged != null && charged > 0) ? "o" : "x";
+    }
+
+    // ----------------------- 내부 헬퍼: 예정일자 계산 -------------------------
+    private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
+        if (registerDate == null) {
+            registerDate = LocalDate.now();
+        }
+        if (phasedate == null || phasedate.isEmpty()) {
+            return registerDate;
+        }
+        if (phasedate.endsWith("달") || phasedate.endsWith("개월")) {
+            int months = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
+            return registerDate.plusMonths(months);
+        } else if (phasedate.endsWith("년")) {
+            int years = Integer.parseInt(phasedate.replaceAll("[^0-9]", ""));
+            return registerDate.plusYears(years);
+        } else {
+            // 인식 안 되면 크게 +100년
+            return registerDate.plusYears(100);
+        }
+    }
+    public void deleteCustomer(Integer id) {
+        customerRepository.deleteById(id);
     }
 }

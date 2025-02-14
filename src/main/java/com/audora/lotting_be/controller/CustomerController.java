@@ -128,6 +128,8 @@ public class CustomerController {
         loan.setSelfammount(updatedLoan.getSelfammount());
         customer.setLoan(loan);
 
+        System.out.println("============================================");
+
         // 우선 저장
         customerService.saveCustomer(customer);
         // 전체 재계산

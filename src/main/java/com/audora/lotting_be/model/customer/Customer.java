@@ -47,7 +47,7 @@ public class Customer {
     @Embedded
     private Attachments attachments = new Attachments();        // 부속서류
 
-    // 기존 대출/자납 처리를 위한 loan 필드 (기록용)
+    // 기존 대출/자납 기록용 loan 필드
     @Embedded
     private Loan loan = new Loan();                           // 대출, 자납
 
@@ -80,7 +80,7 @@ public class Customer {
     @JsonManagedReference
     private Status status; // 현 상태
 
-    // ★ 신규 추가: 고객의 여러 입금내역(DepositHistory)
+    // 여러 입금내역
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference(value = "customer-depositHistories")
     private List<DepositHistory> depositHistories;

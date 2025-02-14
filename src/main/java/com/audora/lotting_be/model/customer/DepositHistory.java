@@ -36,7 +36,7 @@ public class DepositHistory {
     // 계좌 (알파벳 단축어 등)
     private String account;
 
-    // 각 납입차수별 입금 완료 여부 (입금 완료면 "o", 아니면 공백)
+    // 각 납입차수별 입금 완료 여부
     private String depositPhase1;
     private String depositPhase2;
     private String depositPhase3;
@@ -48,15 +48,14 @@ public class DepositHistory {
     private String depositPhase9;
     private String depositPhase10;
 
-    // 대출 여부 (대출 시 "o"로 표시)
+    // 대출 여부 (대출/자납 입금이면 값이 있음)
     private String loanStatus;
-    // 대출 일자 (DepositHistory의 loanDate – naming 전략에 따라 "loan_date"로 매핑됨)
+    // 대출 일자
     private LocalDate loanDate;
     // 비고 (메모)
     private String remarks;
 
-    // ★ 신규 추가: 대출/자납 입금 시 관련 Loan 정보 기록 (기존 Loan과 동일한 구조)
-    // 단, 컬럼명이 충돌하지 않도록 @AttributeOverrides로 별도 이름 지정
+    // ★ 신규: 대출/자납 입금 관련 상세 정보를 기록 (컬럼명 충돌 방지를 위해 재정의)
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "loandate", column = @Column(name = "loan_details_loandate")),

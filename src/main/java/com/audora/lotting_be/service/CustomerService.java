@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,10 +50,12 @@ public class CustomerService {
                 phase.setCharge(charge);
                 phase.setService(0L);
                 phase.setExemption(0L);
+                // feesum는 charge + service - exemption
                 long feesum = charge + 0L - 0L;
                 phase.setFeesum(feesum);
                 phase.setCharged(0L);
                 long discountVal = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
+                // 일반 입금 시 net due = feesum - discount
                 phase.setSum(feesum - discountVal);
                 phase.setPlanneddateString(fpp.getPhasedate());
                 LocalDate plannedDate = calculatePlannedDate(customer.getRegisterdate(), fpp.getPhasedate());
@@ -81,7 +82,7 @@ public class CustomerService {
 
     // ======================== 2) "전체 재계산" 로직  ========================
     public void recalculateEverything(Customer customer) {
-        // 1) Phase 초기화: 입금(payment) 관련 금액 초기화
+        // 1) 각 phase의 입금 관련 금액 초기화
         if (customer.getPhases() != null) {
             for (Phase phase : customer.getPhases()) {
                 phase.setCharged(0L);
@@ -92,50 +93,97 @@ public class CustomerService {
                 long feesum = charge + service - exemption;
                 phase.setFeesum(feesum);
                 long discountVal = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
+                // 일반 입금 시 net due = feesum - discount
                 phase.setSum(feesum - discountVal);
             }
         }
 
-        // 2) 기존 예약금 분배 제거 – 이제 예약금은 DepositHistory로 처리
-
-        // 3) DepositHistory 입금내역 분배 – 할인액을 반영한 net due 기준
+        // 2) DepositHistory를 통한 입금 분배
         long depositHistLeftoverTotal = 0L;
         List<DepositHistory> histories = customer.getDepositHistories();
         if (histories != null && !histories.isEmpty()) {
+            // 시간순으로 정렬
             histories.sort(Comparator.comparing(DepositHistory::getTransactionDateTime));
             for (DepositHistory dh : histories) {
                 long amount = (dh.getDepositAmount() != null) ? dh.getDepositAmount() : 0L;
                 LocalDate txDate = (dh.getTransactionDateTime() != null)
                         ? dh.getTransactionDateTime().toLocalDate()
                         : customer.getRegisterdate();
-                long leftover = distributeDepositPaymentToPhases(customer, amount, txDate);
+                // loanStatus가 "o"이면 대출/자납 입금으로 처리
+                boolean isLoanDeposit = "o".equalsIgnoreCase(dh.getLoanStatus());
+                long leftover = distributeDepositPaymentToPhases(customer, amount, txDate, isLoanDeposit);
                 depositHistLeftoverTotal += leftover;
             }
         }
 
-        // 4) 초과분(leftover)을 status에 기록
-        long depositAndHistoryLeftover = depositHistLeftoverTotal;
+        // 3) 남은 금액(초과분)을 status에 기록
         Status st = customer.getStatus();
         if (st == null) {
             st = new Status();
             st.setCustomer(customer);
             customer.setStatus(st);
         }
-        st.setExceedamount(depositAndHistoryLeftover);
+        st.setExceedamount(depositHistLeftoverTotal);
 
-        // 5) 상태 필드 업데이트 (미납금 등 deposit payment 기준)
+        // 4) 상태 필드 업데이트 (미납금 등)
         updateStatusFields(customer);
 
-        // 6) [추가] DepositHistory 중 대출/자납 입금(loanStatus == "o") 내역을 기준으로 기존 loan 필드 업데이트
+        // 5) [추가] DepositHistory 중 대출/자납 입금(loanStatus == "o") 내역을 기준으로 loan 필드 업데이트
         updateLoanField(customer);
 
-        // 7) 최종 DB 저장
+        // 6) 최종 DB 저장
         customerRepository.save(customer);
     }
 
     /**
-     * DepositHistory 내에서 loanStatus가 "o"인 내역의 depositAmount 합산 및 최신 대출일자를
-     * 기존 고객의 loan 필드(기록용)에 업데이트
+     * DepositHistory 내에서 loanStatus가 "o"인 입금 기록은 할인액을 적용하지 않음.
+     * isLoanDeposit = true이면, required = feesum - charged.
+     * isLoanDeposit = false이면, required = (feesum - discount) - charged.
+     */
+    public long distributeDepositPaymentToPhases(Customer customer, long paymentAmount, LocalDate paymentDate, boolean isLoanDeposit) {
+        List<Phase> phases = customer.getPhases();
+        if (phases == null || phases.isEmpty()) {
+            return paymentAmount;
+        }
+        // phase 번호 순으로 정렬
+        phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
+        long remaining = paymentAmount;
+        for (Phase phase : phases) {
+            long already = (phase.getCharged() != null) ? phase.getCharged() : 0L;
+            long feesum = (phase.getFeesum() != null) ? phase.getFeesum() : 0L;
+            long discount = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
+            long required;
+            if (isLoanDeposit) {
+                // 대출/자납 입금: 할인액 무시 → required = feesum - already
+                required = feesum - already;
+            } else {
+                // 일반 입금: required = (feesum - discount) - already
+                required = (feesum - discount) - already;
+            }
+            if (required <= 0) {
+                continue;
+            }
+            if (remaining >= required) {
+                phase.setCharged(already + required);
+                // phase의 남은 금액:
+                phase.setSum((isLoanDeposit ? feesum : (feesum - discount)) - (already + required));
+                if (phase.getFullpaiddate() == null) {
+                    phase.setFullpaiddate(paymentDate);
+                }
+                remaining -= required;
+            } else {
+                phase.setCharged(already + remaining);
+                phase.setSum((isLoanDeposit ? feesum : (feesum - discount)) - (already + remaining));
+                remaining = 0;
+                break;
+            }
+        }
+        return remaining;
+    }
+
+    /**
+     * DepositHistory 중 대출/자납 입금(loanStatus == "o") 내역의 총합과 최신 입금일자를
+     * 고객의 loan 필드(기록용)에 업데이트
      */
     public void updateLoanField(Customer customer) {
         if (customer.getDepositHistories() != null && customer.getLoan() != null) {
@@ -153,39 +201,6 @@ public class CustomerService {
                     .orElse(null);
             customer.getLoan().setLoandate(latestLoanDate);
         }
-    }
-
-    public long distributeDepositPaymentToPhases(Customer customer, long paymentAmount, LocalDate paymentDate) {
-        List<Phase> phases = customer.getPhases();
-        if (phases == null || phases.isEmpty()) {
-            return paymentAmount;
-        }
-        phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
-        long remaining = paymentAmount;
-        for (Phase phase : phases) {
-            long already = (phase.getCharged() != null) ? phase.getCharged() : 0L;
-            long feesum = (phase.getFeesum() != null) ? phase.getFeesum() : 0L;
-            long discount = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
-            long netDue = feesum - discount;
-            long required = netDue - already;
-            if (required <= 0) {
-                continue;
-            }
-            if (remaining >= required) {
-                phase.setCharged(already + required);
-                phase.setSum(netDue - (already + required));
-                if (phase.getFullpaiddate() == null) {
-                    phase.setFullpaiddate(paymentDate);
-                }
-                remaining -= required;
-            } else {
-                phase.setCharged(already + remaining);
-                phase.setSum(netDue - (already + remaining));
-                remaining = 0;
-                break;
-            }
-        }
-        return remaining;
     }
 
     public void updateStatusFields(Customer customer) {
@@ -206,16 +221,16 @@ public class CustomerService {
                 long feesum = (p.getFeesum() != null) ? p.getFeesum() : 0L;
                 long discount = (p.getDiscount() != null) ? p.getDiscount() : 0L;
                 long depositPaid = (p.getCharged() != null) ? p.getCharged() : 0L;
-                long netDue = feesum - discount - depositPaid;
-                return netDue;
+                // 일반 입금 기준 net due = (feesum - discount) - depositPaid
+                return (feesum - discount) - depositPaid;
             }).sum();
             status.setUnpaidammout(unpaidAmmout);
 
             LocalDate today = LocalDate.now();
             List<Integer> unpaidPhases = phases.stream()
-                    .filter(p -> p.getPlanneddate() != null
-                            && p.getPlanneddate().isBefore(today)
-                            && p.getFullpaiddate() == null)
+                    .filter(p -> p.getPlanneddate() != null &&
+                            p.getPlanneddate().isBefore(today) &&
+                            p.getFullpaiddate() == null)
                     .map(Phase::getPhaseNumber)
                     .sorted()
                     .collect(Collectors.toList());
@@ -297,8 +312,7 @@ public class CustomerService {
             boolean hasOverdue = phases.stream().anyMatch(phase ->
                     phase.getPlanneddate() != null &&
                             phase.getPlanneddate().isBefore(today) &&
-                            phase.getFullpaiddate() == null
-            );
+                            phase.getFullpaiddate() == null);
             return !hasOverdue;
         }).count();
     }
@@ -333,10 +347,10 @@ public class CustomerService {
             List<Phase> phases = c.getPhases();
             if (phases == null || phases.isEmpty()) continue;
             List<Phase> unpaidPhases = phases.stream().filter(phase ->
-                    phase.getPlanneddate() != null &&
-                            phase.getPlanneddate().isBefore(today) &&
-                            phase.getFullpaiddate() == null
-            ).collect(Collectors.toList());
+                            phase.getPlanneddate() != null &&
+                                    phase.getPlanneddate().isBefore(today) &&
+                                    phase.getFullpaiddate() == null)
+                    .collect(Collectors.toList());
 
             LateFeeInfo info = new LateFeeInfo();
             info.setId(c.getId());

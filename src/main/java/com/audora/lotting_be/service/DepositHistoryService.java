@@ -1,4 +1,3 @@
-// src/main/java/com/audora/lotting_be/service/DepositHistoryService.java
 package com.audora.lotting_be.service;
 
 import com.audora.lotting_be.model.customer.Customer;
@@ -22,35 +21,37 @@ public class DepositHistoryService {
     private CustomerService customerService;
 
     /**
-     * [생성] 입금내역을 생성한 뒤, 전체 재계산 및 loan 필드 업데이트
+     * [생성] 입금내역을 생성한 뒤, 전체 재계산
      */
     @Transactional
     public DepositHistory createDepositHistory(DepositHistory depositHistory) {
         if (depositHistory.getCustomer() == null || depositHistory.getCustomer().getId() == null) {
             throw new IllegalArgumentException("입금내역 생성 시 고객 ID 정보가 필요합니다.");
         }
-        // 고객 조회
+        // 1) 고객 조회
         Customer customer = customerRepository.findById(depositHistory.getCustomer().getId())
-                .orElseThrow(() -> new IllegalArgumentException("고객을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당 고객을 찾을 수 없습니다."));
 
+        // 2) 저장
         depositHistory.setCustomer(customer);
         DepositHistory saved = depositHistoryRepository.save(depositHistory);
 
-        // 전체 재계산 및 loan 필드 업데이트 (내부에서 updateLoanField 호출)
+        // 3) 전체 재계산 (loanRecord / selfRecord는 recalcEverything 내부에서 결정)
         customerService.recalculateEverything(customer);
 
+        // 4) 최종 반영된 depositHistory 다시 조회하여 반환(선택)
+        saved = depositHistoryRepository.findById(saved.getId()).orElse(saved);
         return saved;
     }
 
     /**
-     * [수정] 수정 후 전체 재계산 및 loan 필드 업데이트
+     * [수정] 수정 후 전체 재계산
      */
     @Transactional
     public DepositHistory updateDepositHistory(Long id, DepositHistory updatedDepositHistory) {
         DepositHistory existing = depositHistoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("입금내역을 찾을 수 없습니다."));
 
-        // 고객 확인
         Customer customer = existing.getCustomer();
         if (updatedDepositHistory.getCustomer() != null && updatedDepositHistory.getCustomer().getId() != null) {
             if (!customer.getId().equals(updatedDepositHistory.getCustomer().getId())) {
@@ -58,7 +59,7 @@ public class DepositHistoryService {
             }
         }
 
-        // 필드 업데이트
+        // 필드들 업데이트
         existing.setTransactionDateTime(updatedDepositHistory.getTransactionDateTime());
         existing.setDescription(updatedDepositHistory.getDescription());
         existing.setDetails(updatedDepositHistory.getDetails());
@@ -81,17 +82,26 @@ public class DepositHistoryService {
         existing.setLoanDate(updatedDepositHistory.getLoanDate());
         existing.setRemarks(updatedDepositHistory.getRemarks());
         existing.setLoanDetails(updatedDepositHistory.getLoanDetails());
+        existing.setTargetPhases(updatedDepositHistory.getTargetPhases());
 
+        // loanRecord, selfRecord는 recalcEverything 시점에서 다시 계산하므로
+        // 굳이 여기서 setLoanRecord(...)할 필요가 없거나, null로 유지 가능.
+        // existing.setLoanRecord(updatedDepositHistory.getLoanRecord());
+        // existing.setSelfRecord(updatedDepositHistory.getSelfRecord());
+
+        // 저장
         DepositHistory saved = depositHistoryRepository.save(existing);
 
-        // 전체 재계산 및 loan 필드 업데이트
+        // 전체 재계산
         customerService.recalculateEverything(customer);
 
+        // 다시 조회하여 반환(옵션)
+        saved = depositHistoryRepository.findById(saved.getId()).orElse(saved);
         return saved;
     }
 
     /**
-     * [삭제] 삭제 후 전체 재계산 및 loan 필드 업데이트
+     * [삭제] 삭제 후 전체 재계산
      */
     @Transactional
     public void deleteDepositHistory(Long id) {
@@ -104,7 +114,7 @@ public class DepositHistoryService {
         }
         depositHistoryRepository.delete(dh);
 
-        // 전체 재계산 및 loan 필드 업데이트
+        // 전체 재계산
         customerService.recalculateEverything(customer);
     }
 }

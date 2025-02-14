@@ -47,6 +47,7 @@ public class Customer {
     @Embedded
     private Attachments attachments = new Attachments();        // 부속서류
 
+    // 기존 대출/자납 처리를 위한 loan 필드 (기록용)
     @Embedded
     private Loan loan = new Loan();                           // 대출, 자납
 

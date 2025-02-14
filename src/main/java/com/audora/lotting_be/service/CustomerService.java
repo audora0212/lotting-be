@@ -1,3 +1,4 @@
+// src/main/java/com/audora/lotting_be/service/CustomerService.java
 package com.audora.lotting_be.service;
 
 import com.audora.lotting_be.model.Fee.Fee;
@@ -30,14 +31,6 @@ public class CustomerService {
     private FeeRepository feeRepository;
 
     // ======================== 1) 고객 생성 및 초기 Phase 설정 ========================
-    /**
-     * 고객을 새로 생성할 때,
-     * - Fee 테이블에서 (군+타입+가입차순)에 해당하는 Fee를 찾아 Phase를 초기화
-     * - Status도 생성(없다면)
-     * - DB 저장 후, 전체 재계산을 진행한다.
-     *
-     * 예약금은 더 이상 자동으로 Phase에 분배하지 않고, DepositHistory를 통해 처리한다.
-     */
     public Customer createCustomer(Customer customer) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
@@ -58,13 +51,10 @@ public class CustomerService {
                 phase.setCharge(charge);
                 phase.setService(0L);
                 phase.setExemption(0L);
-                // feesum는 원래 부담금 (charge + service - exemption)
-                long feesum = charge + 0L - 0L; // 초기에는 service, exemption이 0
+                long feesum = charge + 0L - 0L;
                 phase.setFeesum(feesum);
-                // 대출/자납용 별도 필드는 사용하지 않고 charged 필드를 사용합니다.
                 phase.setCharged(0L);
                 long discountVal = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
-                // net due(실제 납부해야 할 금액)는 feesum에서 할인액을 뺀 값
                 phase.setSum(feesum - discountVal);
                 phase.setPlanneddateString(fpp.getPhasedate());
                 LocalDate plannedDate = calculatePlannedDate(customer.getRegisterdate(), fpp.getPhasedate());
@@ -82,28 +72,19 @@ public class CustomerService {
             customer.setStatus(status);
         }
 
-        // 먼저 DB에 저장 (Cascade로 Phase, Status도 함께)
         customer = customerRepository.save(customer);
 
-        // 전체 재계산 진행 (예약금은 DepositHistory로 처리)
         recalculateEverything(customer);
 
         return customer;
     }
 
     // ======================== 2) "전체 재계산" 로직  ========================
-    /**
-     * (a) 모든 Phase의 입금 관련 금액(채권)을 초기화
-     * (b) DepositHistory의 입금내역을 통해 deposit payment 분배
-     * (c) 대출/자납액도 deposit payment와 동일한 방식으로 처리
-     * (d) 초과분(leftover)을 status에 기록하고, 미납금 등 상태를 갱신
-     * (e) 최종 DB 저장
-     */
     public void recalculateEverything(Customer customer) {
         // 1) Phase 초기화: 입금(payment) 관련 금액 초기화
         if (customer.getPhases() != null) {
             for (Phase phase : customer.getPhases()) {
-                phase.setCharged(0L);      // 입금 지급액 초기화
+                phase.setCharged(0L);
                 phase.setFullpaiddate(null);
                 long charge = (phase.getCharge() != null) ? phase.getCharge() : 0L;
                 long service = (phase.getService() != null) ? phase.getService() : 0L;
@@ -111,12 +92,11 @@ public class CustomerService {
                 long feesum = charge + service - exemption;
                 phase.setFeesum(feesum);
                 long discountVal = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
-                // net due = feesum - discount
                 phase.setSum(feesum - discountVal);
             }
         }
 
-        // 2) 기존 예약금(Deposit) 분배 제거 – 이제 예약금은 DepositHistory로 처리함
+        // 2) 기존 예약금 분배 제거 – 이제 예약금은 DepositHistory로 처리
 
         // 3) DepositHistory 입금내역 분배 – 할인액을 반영한 net due 기준
         long depositHistLeftoverTotal = 0L;
@@ -133,21 +113,7 @@ public class CustomerService {
             }
         }
 
-        // 4) 대출/자납 분배 – deposit 분배와 동일하게 charged 필드로 처리
-        if (customer.getLoan() != null) {
-            long loanAmount = (customer.getLoan().getLoanammount() != null) ? customer.getLoan().getLoanammount() : 0L;
-            long selfAmount = (customer.getLoan().getSelfammount() != null) ? customer.getLoan().getSelfammount() : 0L;
-            long totalLoan = loanAmount + selfAmount;
-            if (totalLoan > 0) {
-                LocalDate loanDate = (customer.getLoan().getLoandate() != null) ? customer.getLoan().getLoandate()
-                        : (customer.getLoan().getSelfdate() != null ? customer.getLoan().getSelfdate() : customer.getRegisterdate());
-                long leftover = distributeDepositPaymentToPhases(customer, totalLoan, loanDate);
-                // 대출/자납도 별도 필드 없이 기존 charged에 반영됩니다.
-                // 필요에 따라 leftover에 대한 추가 처리를 할 수 있습니다.
-            }
-        }
-
-        // 5) 초과분(leftover)을 status에 기록 (여기서는 DepositHistory의 초과분만 기록)
+        // 4) 초과분(leftover)을 status에 기록
         long depositAndHistoryLeftover = depositHistLeftoverTotal;
         Status st = customer.getStatus();
         if (st == null) {
@@ -156,24 +122,44 @@ public class CustomerService {
             customer.setStatus(st);
         }
         st.setExceedamount(depositAndHistoryLeftover);
-        // 대출/자납 관련 초과분은 별도 처리하지 않음
 
-        // 6) 상태 필드 업데이트 (미납금 등 deposit payment 기준)
+        // 5) 상태 필드 업데이트 (미납금 등 deposit payment 기준)
         updateStatusFields(customer);
+
+        // 6) [추가] DepositHistory 중 대출/자납 입금(loanStatus == "o") 내역을 기준으로 기존 loan 필드 업데이트
+        updateLoanField(customer);
 
         // 7) 최종 DB 저장
         customerRepository.save(customer);
     }
 
     /**
-     * DepositHistory 등 일반 입금(예약금 제외) 분배 – 할인액을 반영하여 net due 계산
+     * DepositHistory 내에서 loanStatus가 "o"인 내역의 depositAmount 합산 및 최신 대출일자를
+     * 기존 고객의 loan 필드(기록용)에 업데이트
      */
+    public void updateLoanField(Customer customer) {
+        if (customer.getDepositHistories() != null && customer.getLoan() != null) {
+            long totalLoan = customer.getDepositHistories().stream()
+                    .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
+                    .mapToLong(dh -> (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L))
+                    .sum();
+            customer.getLoan().setLoanammount(totalLoan);
+
+            LocalDate latestLoanDate = customer.getDepositHistories().stream()
+                    .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
+                    .map(DepositHistory::getLoanDate)
+                    .filter(Objects::nonNull)
+                    .max(LocalDate::compareTo)
+                    .orElse(null);
+            customer.getLoan().setLoandate(latestLoanDate);
+        }
+    }
+
     public long distributeDepositPaymentToPhases(Customer customer, long paymentAmount, LocalDate paymentDate) {
         List<Phase> phases = customer.getPhases();
         if (phases == null || phases.isEmpty()) {
             return paymentAmount;
         }
-        // 차수 순 정렬
         phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
         long remaining = paymentAmount;
         for (Phase phase : phases) {
@@ -202,9 +188,6 @@ public class CustomerService {
         return remaining;
     }
 
-    /**
-     * Phase에 따라 미납금, 미납 차수 등을 Status 필드에 갱신 (입금 payment 기준 – 할인액 반영)
-     */
     public void updateStatusFields(Customer customer) {
         List<Phase> phases = customer.getPhases();
         Status status = customer.getStatus();
@@ -247,11 +230,8 @@ public class CustomerService {
             status.setAmmountsum(ammountsum);
 
             status.setPercent40((long) (ammountsum * 0.4));
-            // exceedamount는 recalculateEverything에서 셋팅됨.
         }
     }
-
-    // ======================== 3) 그 외 메서드 (검색, 조회, 삭제 등) ========================
 
     public Integer getNextCustomerId() {
         return customerRepository.getNextId();
@@ -488,9 +468,17 @@ public class CustomerService {
         dto.setDepositPhase9(getPhaseStatus(customer, 9));
         dto.setDepositPhase10(getPhaseStatus(customer, 10));
 
-        if (customer.getLoan() != null) {
-            dto.setLoanAmount(customer.getLoan().getLoanammount());
-            dto.setLoanDate(customer.getLoan().getLoandate());
+        // 대출/자납 입금 정보는 DepositHistory 중 loanStatus가 "o"인 가장 최신 내역에서 가져옵니다.
+        DepositHistory loanDeposit = null;
+        if (customer.getDepositHistories() != null) {
+            loanDeposit = customer.getDepositHistories().stream()
+                    .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
+                    .max(Comparator.comparing(DepositHistory::getTransactionDateTime))
+                    .orElse(null);
+        }
+        if (loanDeposit != null) {
+            dto.setLoanAmount(loanDeposit.getDepositAmount());
+            dto.setLoanDate(loanDeposit.getLoanDate());
         } else {
             dto.setLoanAmount(null);
             dto.setLoanDate(null);
@@ -513,7 +501,6 @@ public class CustomerService {
         return (charged != null && charged > 0) ? "o" : "x";
     }
 
-    // ----------------------- 내부 헬퍼: 예정일자 계산 -------------------------
     private LocalDate calculatePlannedDate(LocalDate registerDate, String phasedate) {
         if (registerDate == null) {
             registerDate = LocalDate.now();

@@ -1,6 +1,7 @@
 // src/main/java/com/audora/lotting_be/model/customer/DepositHistory.java
 package com.audora.lotting_be.model.customer;
 
+import com.audora.lotting_be.model.customer.minor.Loan;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -47,15 +48,28 @@ public class DepositHistory {
     private String depositPhase9;
     private String depositPhase10;
 
-    // 대출 여부 (대출시 "o")
+    // 대출 여부 (대출 시 "o"로 표시)
     private String loanStatus;
-    // 대출 일자
+    // 대출 일자 (DepositHistory의 loanDate – naming 전략에 따라 "loan_date"로 매핑됨)
     private LocalDate loanDate;
     // 비고 (메모)
     private String remarks;
 
+    // ★ 신규 추가: 대출/자납 입금 시 관련 Loan 정보 기록 (기존 Loan과 동일한 구조)
+    // 단, 컬럼명이 충돌하지 않도록 @AttributeOverrides로 별도 이름 지정
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "loandate", column = @Column(name = "loan_details_loandate")),
+            @AttributeOverride(name = "loanbank", column = @Column(name = "loan_details_loanbank")),
+            @AttributeOverride(name = "loanammount", column = @Column(name = "loan_details_loanammount")),
+            @AttributeOverride(name = "selfdate", column = @Column(name = "loan_details_selfdate")),
+            @AttributeOverride(name = "selfammount", column = @Column(name = "loan_details_selfammount")),
+            @AttributeOverride(name = "loanselfsum", column = @Column(name = "loan_details_loanselfsum")),
+            @AttributeOverride(name = "loanselfcurrent", column = @Column(name = "loan_details_loanselfcurrent"))
+    })
+    private Loan loanDetails;
+
     // DepositHistory는 하나의 고객에 종속됨
-    // 순환참조 방지를 위해 value를 "customer-depositHistories"로 지정합니다.
     @ManyToOne
     @JoinColumn(name = "customer_id")
     @JsonBackReference(value = "customer-depositHistories")

@@ -1,7 +1,9 @@
+// src/main/java/com/audora/lotting_be/controller/DepositHistoryController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.DepositHistory;
+import com.audora.lotting_be.repository.DepositHistoryRepository;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.DepositHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/deposit") // 입금내역 관련 엔드포인트
@@ -20,6 +23,9 @@ public class DepositHistoryController {
     @Autowired
     private CustomerService customerService;
 
+    @Autowired
+    private DepositHistoryRepository depositHistoryRepository;
+
     // [GET] 특정 고객의 입금내역 조회
     // URL 예: GET /deposit/customer/123
     @GetMapping("/customer/{userId}")
@@ -30,6 +36,14 @@ public class DepositHistoryController {
         }
         List<DepositHistory> depositHistories = customer.getDepositHistories();
         return ResponseEntity.ok(depositHistories);
+    }
+
+    // [GET] 단일 입금내역 조회
+    @GetMapping("/{id}")
+    public ResponseEntity<DepositHistory> getDepositHistoryById(@PathVariable Long id) {
+        Optional<DepositHistory> depositHistoryOpt = depositHistoryRepository.findById(id);
+        return depositHistoryOpt.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // [POST] 입금내역 생성

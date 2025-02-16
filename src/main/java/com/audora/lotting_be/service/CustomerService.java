@@ -97,7 +97,7 @@ public class CustomerService {
     /**
      *  전체 재계산:
      *  (1) 각 phase의 charged/feesum/fullpaiddate 초기화
-     *  (2) 모든 depositHistory 시간순 정렬 → 하나씩 분배 (distribute)
+     *  (2) 모든 depositHistory를 처리하여 하나씩 분배(distribute)
      *  (3) leftover(loanExceedAmount 등) 갱신
      *  (4) Status(미납금 등) 업데이트
      *  (5) Loan 필드 업데이트 (합산)
@@ -130,7 +130,7 @@ public class CustomerService {
             }
         }
 
-        // 3) DepositHistory를 시간순으로 처리하여, leftover 계산
+        // 3) DepositHistory를 처리하여, leftover 계산
         List<DepositHistory> histories = customer.getDepositHistories();
         long leftoverGeneral = 0L;
         long leftoverLoan = 0L;
@@ -140,13 +140,18 @@ public class CustomerService {
         boolean anySelfExists = false;  // 과거 자납 납부여부
 
         if (histories != null && !histories.isEmpty()) {
-            // 거래일시 오름차순 정렬
-            histories.sort(Comparator.comparing(DepositHistory::getTransactionDateTime));
+            // 수정: 대출/자납 기록을 일반 입금보다 먼저 처리하도록 정렬
+            histories.sort((dh1, dh2) -> {
+                boolean isLoan1 = "o".equalsIgnoreCase(dh1.getLoanStatus());
+                boolean isLoan2 = "o".equalsIgnoreCase(dh2.getLoanStatus());
+                if (isLoan1 && !isLoan2) return -1;
+                if (!isLoan1 && isLoan2) return 1;
+                return dh1.getTransactionDateTime().compareTo(dh2.getTransactionDateTime());
+            });
 
             for (DepositHistory dh : histories) {
                 // (a) loanRecord, selfRecord 세팅
                 if ("o".equalsIgnoreCase(dh.getLoanStatus()) && dh.getLoanDetails() != null) {
-                    // loanammount > 0 -> 첫 대출이면 "1", 아니면 "0"
                     Long loanA = dh.getLoanDetails().getLoanammount();
                     if (loanA != null && loanA > 0) {
                         if (!anyLoanExists) {
@@ -156,7 +161,6 @@ public class CustomerService {
                             dh.setLoanRecord("0");
                         }
                     }
-                    // selfammount > 0 -> 첫 자납이면 "1", 아니면 "0"
                     Long selfA = dh.getLoanDetails().getSelfammount();
                     if (selfA != null && selfA > 0) {
                         if (!anySelfExists) {
@@ -170,7 +174,6 @@ public class CustomerService {
 
                 // (b) 각 depositHistory별 분배
                 long leftover = distributeDepositPaymentToPhases(customer, dh, cumulativeDeposits);
-
                 // (c) leftover 정리 (대출/자납 leftoverLoan, 일반 leftoverGeneral)
                 if ("o".equalsIgnoreCase(dh.getLoanStatus())) {
                     leftoverLoan += leftover;
@@ -178,7 +181,7 @@ public class CustomerService {
                     leftoverGeneral += leftover;
                 }
 
-                // depositHistory에 변경사항(loanRecord 등) 반영 후 DB 저장
+                // depositHistory에 변경사항 반영 후 DB 저장
                 depositHistoryRepository.save(dh);
             }
         }
@@ -195,10 +198,8 @@ public class CustomerService {
 
         // 5) Status(미납금, unpaidphase 등) 업데이트
         updateStatusFields(customer);
-
         // 6) Loan 필드 업데이트 (히스토리 전체 합산)
         updateLoanField(customer);
-
         // 7) 최종 저장
         customerRepository.save(customer);
     }
@@ -451,7 +452,6 @@ public class CustomerService {
                 if (mostRecentLoan.getLoanDetails().getSelfdate() != null) {
                     customerLoan.setSelfdate(mostRecentLoan.getLoanDetails().getSelfdate());
                 }
-                // 필요하다면 selfammount, loanselfsum 등도 합산 처리 가능
             }
         }
 
@@ -730,7 +730,7 @@ public class CustomerService {
         dto.setAccount("h");
         dto.setReservation("");
 
-        // 1~10차 입금 여부
+        // 1차~10차 입금 여부
         dto.setDepositPhase1(getPhaseStatus(customer, 1));
         dto.setDepositPhase2(getPhaseStatus(customer, 2));
         dto.setDepositPhase3(getPhaseStatus(customer, 3));
@@ -803,5 +803,4 @@ public class CustomerService {
             return registerDate.plusYears(100);
         }
     }
-
 }

@@ -1,10 +1,14 @@
 package com.audora.lotting_be.controller;
 
+import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.DepositHistory;
+import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.DepositHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/deposit") // 입금내역 관련 엔드포인트
@@ -12,6 +16,21 @@ public class DepositHistoryController {
 
     @Autowired
     private DepositHistoryService depositHistoryService;
+
+    @Autowired
+    private CustomerService customerService;
+
+    // [GET] 특정 고객의 입금내역 조회
+    // URL 예: GET /deposit/customer/123
+    @GetMapping("/customer/{userId}")
+    public ResponseEntity<List<DepositHistory>> getDepositHistoriesByCustomerId(@PathVariable Integer userId) {
+        Customer customer = customerService.getCustomerById(userId);
+        if (customer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<DepositHistory> depositHistories = customer.getDepositHistories();
+        return ResponseEntity.ok(depositHistories);
+    }
 
     // [POST] 입금내역 생성
     @PostMapping

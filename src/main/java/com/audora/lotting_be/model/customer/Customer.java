@@ -28,6 +28,7 @@ public class Customer {
     private String registerpath;    // 가입경로
     private String specialnote;     // 특이사항
     private String prizewinning;    // 경품당첨
+    private String votemachine; //투표기기
 
     @Embedded
     private CustomerData customerData = new CustomerData(); // 가입자
@@ -70,7 +71,7 @@ public class Customer {
     private Meetingattend meetingattend = new Meetingattend();  // 총회참석여부
 
     @Embedded
-    private Votemachine votemachine = new Votemachine();        // 투표기기
+    private Agenda agenda = new Agenda();        // 안건
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference

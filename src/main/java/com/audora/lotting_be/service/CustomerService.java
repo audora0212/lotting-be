@@ -90,9 +90,11 @@ public class CustomerService {
      * 전체 재계산:
      * (1) 각 Phase의 charged, feesum, fullpaiddate 초기화
      * (2) 모든 DepositHistory를 순차 처리하여 입금액을 Phase에 배분
-     *     단, 만약 해당 DepositHistory의 depositPhase1에 이미 예상치 못한 값(허용값: "0","1","2")이 있으면
-     *     해당 기록은 phase 배분 계산에서 완전히 배제되어, 기존 값 그대로 유지됩니다.
-     * (3) 대출/자납 입금의 경우, 누적 금액(runningLoanPool)을 targetPhases에 배분
+     *     단, 해당 DepositHistory의 depositPhase 필드에 예상치 못한 값이 있으면
+     *     해당 기록은 배분 계산에서 제외합니다.
+     * (3) 대출/자납 입금의 경우, 누적 금액(runningLoanPool)을 targetPhases에 배분하고,
+     *     동시에 해당 거래가 대출, 자납, 또는 둘 다인지를 loan_details 값을 통해 판단하여,
+     *     대출이면 loan_record, 자납이면 self_record를 첫 거래에 "1", 그 이후에 "0"으로 기록합니다.
      * (4) 남은 일반 입금과 대출/자납 입금 잔액을 Status에 반영
      * (5) Loan 필드를 업데이트하여, 대출과 자납 금액을 별도로 누적
      * (6) 최종 저장
@@ -120,31 +122,52 @@ public class CustomerService {
             }
         }
         // 3) DepositHistory 처리
-        // 프론트에서는 일반 입금 및 대출/자납 입금 모두 depositPhase 값은 null로 전달됩니다.
-        // 만약 depositPhase1(을 비롯한 기타 depositPhase 필드)에 예상치 못한 값이 있다면,
-        // 해당 DepositHistory는 phase 배분 계산에서 완전히 배제됩니다.
         List<DepositHistory> histories = customer.getDepositHistories();
         long leftoverGeneral = 0L;
         AtomicLong runningLoanPool = new AtomicLong(0L);
-        boolean firstLoanDepositProcessed = false;
+        // 새로운 플래그: 대출, 자납 각각 첫 거래 여부
+        boolean firstLoanProcessed = false;
+        boolean firstSelfProcessed = false;
         if (histories != null && !histories.isEmpty()) {
             // 거래일시 순으로 정렬
             histories.sort(Comparator.comparing(DepositHistory::getTransactionDateTime));
             for (DepositHistory dh : histories) {
-                // 만약 depositPhase1에 이미 예상치 못한 값이 있다면(허용값은 "0", "1", "2"),
-                // 이 DepositHistory는 phase 배분 계산에서 배제합니다.
+                // depositPhase1에 예상치 못한 값이 있으면 해당 입금은 계산에 포함하지 않음.
                 String dp1 = dh.getDepositPhase1();
-                if (dp1 != null && !("0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1))) {
-                    // 해당 입금은 계산에 포함되지 않고, 단순 기록용으로만 남김
+                if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
                     continue;
                 }
                 if ("o".equalsIgnoreCase(dh.getLoanStatus())) {
                     // 대출/자납 입금 처리
-                    if (!firstLoanDepositProcessed) {
-                        dh.setLoanRecord("1");
-                        firstLoanDepositProcessed = true;
+                    boolean hasLoan = false;
+                    boolean hasSelf = false;
+                    if (dh.getLoanDetails() != null) {
+                        if (dh.getLoanDetails().getLoanammount() != null && dh.getLoanDetails().getLoanammount() > 0) {
+                            hasLoan = true;
+                        }
+                        if (dh.getLoanDetails().getSelfammount() != null && dh.getLoanDetails().getSelfammount() > 0) {
+                            hasSelf = true;
+                        }
+                    }
+                    if (hasLoan) {
+                        if (!firstLoanProcessed) {
+                            dh.setLoanRecord("1");
+                            firstLoanProcessed = true;
+                        } else {
+                            dh.setLoanRecord("0");
+                        }
                     } else {
-                        dh.setLoanRecord("0");
+                        dh.setLoanRecord(null);
+                    }
+                    if (hasSelf) {
+                        if (!firstSelfProcessed) {
+                            dh.setSelfRecord("1");
+                            firstSelfProcessed = true;
+                        } else {
+                            dh.setSelfRecord("0");
+                        }
+                    } else {
+                        dh.setSelfRecord(null);
                     }
                     long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
                     runningLoanPool.addAndGet(depositAmt);
@@ -178,15 +201,15 @@ public class CustomerService {
     // ================================================
     /**
      * DepositHistory(일반 입금)의 입금액을 Phase별로 배분하고 남은 금액(leftover)을 반환합니다.
-     * 단, 해당 DepositHistory의 depositPhase1에 이미 예상치 못한 값이 있으면,
-     * phase 배분 계산을 전혀 수행하지 않고 depositAmount 전체를 남김(return)으로 처리합니다.
+     * 단, 해당 DepositHistory의 depositPhase1에 예상치 못한 값이 있으면,
+     * 배분을 전혀 수행하지 않고 depositAmount 전체를 남김으로 처리합니다.
      */
     public long distributeDepositPaymentToPhases(Customer customer,
                                                  DepositHistory dh,
                                                  Map<Integer, Long> cumulativeDeposits) {
         // depositPhase1에 예상치 못한 값이 있으면 배분하지 않음.
         String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !("0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1))) {
+        if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
             return (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
         }
         long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
@@ -234,7 +257,7 @@ public class CustomerService {
                                                      Map<Integer, Long> cumulativeDeposits,
                                                      AtomicLong runningLoanPool) {
         String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !("0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1))) {
+        if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
             // 예상치 못한 값이 있으므로 해당 기록은 phase 분배에서 배제
             return;
         }
@@ -305,7 +328,7 @@ public class CustomerService {
                 break;
         }
         // 만약 현재 값이 이미 존재하고 허용된 값("0", "1", "2")이 아니라면, 아무것도 변경하지 않습니다.
-        if (currentValue != null && !("0".equals(currentValue) || "1".equals(currentValue) || "2".equals(currentValue))) {
+        if (currentValue != null && !( "0".equals(currentValue) || "1".equals(currentValue) || "2".equals(currentValue) )) {
             System.out.println("Phase " + phaseNo + " depositPhase already has a record value (" + currentValue + "); computed value (" + computedValue + ") will not override it.");
             return;
         }
@@ -438,9 +461,11 @@ public class CustomerService {
         Optional<Customer> optionalCustomer = customerRepository.findById(id);
         return optionalCustomer.orElse(null);
     }
+
     public Customer saveCustomer(Customer customer) {
         return customerRepository.save(customer);
     }
+
     public void deleteCustomer(Integer id) {
         customerRepository.deleteById(id);
     }
@@ -459,6 +484,7 @@ public class CustomerService {
         }
         return null;
     }
+
     public List<Phase> getCompletedPhases(Integer customerId) {
         Optional<Customer> customerOptional = customerRepository.findById(customerId);
         if (customerOptional.isPresent()) {
@@ -477,6 +503,7 @@ public class CustomerService {
     public long countContractedCustomers() {
         return customerRepository.countByCustomertype("c");
     }
+
     public long countFullyPaidOrNotOverdueCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
         LocalDate today = LocalDate.now();

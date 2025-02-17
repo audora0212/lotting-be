@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class DepositHistoryService {
 
@@ -19,9 +21,12 @@ public class DepositHistoryService {
     private CustomerService customerService;
 
     /**
-     * 입금내역 생성 후 전체 재계산
-     * 단, 만약 depositPhase1에 예상치 못한 값이 있으면 재계산을 유도하지 않습니다.
+     * 모든 DepositHistory 엔티티를 반환하는 메서드 (신규 추가)
      */
+    public List<DepositHistory> getAllDepositHistories() {
+        return depositHistoryRepository.findAll();
+    }
+
     @Transactional
     public DepositHistory createDepositHistory(DepositHistory depositHistory) {
         if (depositHistory.getCustomer() == null || depositHistory.getCustomer().getId() == null) {
@@ -40,10 +45,6 @@ public class DepositHistoryService {
         return saved;
     }
 
-    /**
-     * 입금내역 수정 후 전체 재계산
-     * 단, 해당 DepositHistory의 depositPhase1이 예상치 못한 값(기록용)이라면 재계산을 유도하지 않습니다.
-     */
     @Transactional
     public DepositHistory updateDepositHistory(Long id, DepositHistory updatedDepositHistory) {
         DepositHistory existing = depositHistoryRepository.findById(id)
@@ -79,11 +80,6 @@ public class DepositHistoryService {
         return saved;
     }
 
-    /**
-     * 입금내역 삭제 후 전체 재계산
-     * 단, 삭제 대상 DepositHistory가 기록용으로 처리된 경우(예: depositPhase1에 예상치 못한 값이 있으면)
-     * 재계산을 유도하지 않습니다.
-     */
     @Transactional
     public void deleteDepositHistory(Long id) {
         DepositHistory dh = depositHistoryRepository.findById(id)
@@ -100,5 +96,4 @@ public class DepositHistoryService {
             customerService.recalculateEverything(customer);
         }
     }
-
 }

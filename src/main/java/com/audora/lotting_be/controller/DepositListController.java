@@ -1,9 +1,7 @@
-// src/main/java/com/audora/lotting_be/controller/DepositListController.java
-
 package com.audora.lotting_be.controller;
 
-import com.audora.lotting_be.payload.response.CustomerDepositDTO;
-import com.audora.lotting_be.service.CustomerService;
+import com.audora.lotting_be.model.customer.DepositHistory;
+import com.audora.lotting_be.service.DepositHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,22 +9,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/depositlist") //입금 여부 한눈에 보는 페이지 전용
+@RequestMapping("/depositlist") // 입금 여부 한눈에 보는 페이지 전용
 public class DepositListController {
 
-    private final CustomerService customerService;
+    private final DepositHistoryService depositHistoryService;
 
     @Autowired
-    public DepositListController(CustomerService customerService) {
-        this.customerService = customerService;
+    public DepositListController(DepositHistoryService depositHistoryService) {
+        this.depositHistoryService = depositHistoryService;
     }
 
     /**
-     * 모든 회원의 입금 기록 DTO 리스트 반환
+     * 모든 DepositHistory를 반환
      */
     @GetMapping
-    public ResponseEntity<List<CustomerDepositDTO>> getAllDepositHistory() {
-        List<CustomerDepositDTO> depositDTOList = customerService.getAllCustomerDepositDTOs();
-        return ResponseEntity.ok(depositDTOList);
+    public ResponseEntity<List<DepositHistory>> getAllDepositHistory() {
+        List<DepositHistory> depositHistories = depositHistoryService.getAllDepositHistories();
+        return ResponseEntity.ok(depositHistories);
     }
 }

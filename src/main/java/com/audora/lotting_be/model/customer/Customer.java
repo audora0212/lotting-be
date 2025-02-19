@@ -21,6 +21,7 @@ public class Customer {
     private String type;         // 타입
     private String groupname;    // 군
     private String turn;         // 순번
+    private String temptype;     //임시동호
     private String batch;        // 가입차순
     private LocalDate registerdate; // 가입일자
     private Long registerprice;     // 가입가

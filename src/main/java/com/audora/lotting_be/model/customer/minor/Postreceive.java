@@ -7,7 +7,7 @@ import lombok.Data;
 @Embeddable
 @Data
 public class Postreceive {
-    private Integer postnumberreceive; //우편번호
+    private String postnumberreceive; //우편번호
     private String postreceive; //주소
     private String detailaddressreceive; //상세주소
 }

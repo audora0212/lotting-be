@@ -1,6 +1,7 @@
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
+import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.ExcelService;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -241,5 +242,19 @@ public class FileController {
                 .contentType(mediaType)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
                 .body(resource);
+    }
+
+    @PostMapping("/uploadExcel")
+    public ResponseEntity<?> uploadExcelFile(@RequestParam("file") MultipartFile file) {
+        try {
+            // ExcelService의 새로운 메서드를 호출하여 파일 파싱 및 DB 저장
+            System.out.println("엑셀파일 감지됨");
+            excelService.processExcelFile(file);
+            return ResponseEntity.ok(new MessageResponse("엑셀 파일이 성공적으로 처리되었습니다."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("엑셀 파일 처리 중 오류가 발생했습니다."));
+        }
     }
 }

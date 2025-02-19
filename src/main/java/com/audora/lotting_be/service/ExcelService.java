@@ -4,15 +4,19 @@ import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.Phase;
 import com.audora.lotting_be.model.customer.Status;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFTextBox;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -217,28 +221,28 @@ public class ExcelService {
             XSSFSheet sheet = workbook.getSheetAt(0);
 
             // (1) 셀 수정
-            // G9 -> row=8,col=6 : name
+            // G9 -> row=8, col=6 : name
             if (customer.getCustomerData() != null && customer.getCustomerData().getName() != null) {
                 getCell(sheet, 8, 6).setCellValue(customer.getCustomerData().getName());
             }
-            // L49 -> row=48,col=11 : registerdate
+            // L49 -> row=48, col=11 : registerdate
             LocalDate rd = customer.getRegisterdate();
             if (rd != null) {
                 getCell(sheet, 48, 11).setCellValue(rd.toString());
             }
-            // L64 -> row=63,col=11 : name
+            // L64 -> row=63, col=11 : name
             if (customer.getCustomerData() != null && customer.getCustomerData().getName() != null) {
                 getCell(sheet, 63, 11).setCellValue(customer.getCustomerData().getName());
             }
-            // L66 -> row=65,col=11 : resnumfront
+            // L66 -> row=65, col=11 : resnumfront
             if (customer.getCustomerData() != null && customer.getCustomerData().getResnumfront() != null) {
                 getCell(sheet, 65, 11).setCellValue(customer.getCustomerData().getResnumfront());
             }
-            // L68 -> row=67,col=11 : phone
+            // L68 -> row=67, col=11 : phone
             if (customer.getCustomerData() != null && customer.getCustomerData().getPhone() != null) {
                 getCell(sheet, 67, 11).setCellValue(customer.getCustomerData().getPhone());
             }
-            // L70 -> row=69,col=11 : 우편번호 + 상세주소
+            // L70 -> row=69, col=11 : 우편번호 + 상세주소
             String address = "";
             if (customer.getLegalAddress() != null) {
                 if (customer.getLegalAddress().getPost() != null) {
@@ -250,7 +254,7 @@ public class ExcelService {
             }
             getCell(sheet, 69, 11).setCellValue(address);
 
-            // M151 -> row=150,col=12 : resnumfront-resnumback
+            // M151 -> row=150, col=12 : resnumfront-resnumback
             if (customer.getCustomerData() != null
                     && customer.getCustomerData().getResnumfront() != null
                     && customer.getCustomerData().getResnumback() != null) {
@@ -330,7 +334,51 @@ public class ExcelService {
     }
 
     /**
-     * 엑셀 셀 객체를 안전하게 가져오는 헬퍼 메서드
+     * 엑셀 파일을 받아서 처리하는 메서드
+     *
+     * [신규] uploadExcel 엔드포인트에서 호출됩니다.
+     * 엑셀 파일의 첫번째 시트에서 A3~FO3 까지의 데이터를 log.txt 파일에 저장합니다.
+     */
+    public void processExcelFile(MultipartFile file) throws IOException {
+        try (InputStream is = file.getInputStream();
+             XSSFWorkbook workbook = new XSSFWorkbook(is)) {
+            // 첫번째 시트 선택
+            XSSFSheet sheet = workbook.getSheetAt(0);
+
+            // A3는 3번째 행 (인덱스 2)
+            Row row = sheet.getRow(2);
+            if (row == null) {
+                throw new IOException("엑셀 파일의 3번째 행(A3)이 존재하지 않습니다.");
+            }
+
+            // DataFormatter를 사용하여 셀 데이터를 문자열로 읽음
+            DataFormatter formatter = new DataFormatter();
+
+            // FO3의 열 인덱스 계산 (CellReference를 이용)
+            int lastColumn = new CellReference("FO3").getCol();
+
+            StringBuilder sb = new StringBuilder();
+            // A3 (열 0)부터 FO3까지 순서대로 읽음
+            for (int col = 0; col <= lastColumn; col++) {
+                Cell cell = row.getCell(col);
+                String cellValue = formatter.formatCellValue(cell);
+                sb.append(cellValue);
+                if (col < lastColumn) {
+                    sb.append("\t"); // 탭으로 구분
+                }
+            }
+
+            // UTF-8 인코딩으로 log.txt 파일에 저장
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream("log.txt"), StandardCharsets.UTF_8)) {
+                writer.write(sb.toString());
+            }
+
+            System.out.println("엑셀 파일의 첫번째 시트 A3~FO3 데이터가 log.txt 파일에 저장되었습니다.");
+        }
+    }
+
+    /**
+     * 엑셀 시트에서 특정 셀을 안전하게 가져오는 헬퍼 메서드
      */
     private Cell getCell(XSSFSheet sheet, int rowIndex, int colIndex) {
         Row row = sheet.getRow(rowIndex);

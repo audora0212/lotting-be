@@ -158,6 +158,8 @@ public class FileController {
             // 작업 실패 시 tempFile 삭제 후 에러 반환
             tempFile.delete();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         // 5) tempFile -> 메모리에 올려 Resource로 변환, tempFile 삭제 후 반환
@@ -216,6 +218,8 @@ public class FileController {
         } catch (IOException e) {
             tempFile.delete();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         // 5) 메모리에 올려서 다운로드 응답
@@ -248,7 +252,7 @@ public class FileController {
     public ResponseEntity<?> uploadExcelFile(@RequestParam("file") MultipartFile file) {
         try {
             // ExcelService의 새로운 메서드를 호출하여 파일 파싱 및 DB 저장
-            System.out.println("엑셀파일 감지됨");
+            System.out.println("excelfile detected");
             excelService.processExcelFile(file);
             return ResponseEntity.ok(new MessageResponse("엑셀 파일이 성공적으로 처리되었습니다."));
         } catch (Exception e) {

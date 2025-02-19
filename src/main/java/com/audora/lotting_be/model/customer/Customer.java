@@ -49,6 +49,9 @@ public class Customer {
     @Embedded
     private Attachments attachments = new Attachments();        // 부속서류
 
+    @Embedded
+    private Cancel cancel=new Cancel();                       //해약
+
     // 기존 대출/자납 기록용 loan 필드
     @Embedded
     private Loan loan = new Loan();                           // 대출, 자납

@@ -10,4 +10,5 @@ public class Responsible {
     private String division; //본부
     private String team; //팀
     private String managername; //담당자 성명
+    private String feepaid; //수수료 지급
 }

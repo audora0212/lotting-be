@@ -79,9 +79,7 @@ public class CustomerService {
         }
         // 고객 저장 후 전체 재계산
         customer = customerRepository.save(customer);
-        if (recalc) {
             recalculateEverything(customer);
-        }
         return customer;
     }
 

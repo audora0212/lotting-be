@@ -35,7 +35,7 @@ public class CustomerService {
     // ================================================
     // 1) 고객 생성 및 초기 Phase 설정
     // ================================================
-    public Customer createCustomer(Customer customer) {
+    public Customer createCustomer(Customer customer, boolean recalc) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
         }
@@ -79,7 +79,9 @@ public class CustomerService {
         }
         // 고객 저장 후 전체 재계산
         customer = customerRepository.save(customer);
-        recalculateEverything(customer);
+        if (recalc) {
+            recalculateEverything(customer);
+        }
         return customer;
     }
 

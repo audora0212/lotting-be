@@ -258,4 +258,57 @@ public class FileController {
                     .body(new MessageResponse("엑셀 파일 처리 중 오류가 발생했습니다."));
         }
     }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // 새로운 엔드포인트: /regfiledownload
+    // 템플릿 regformat.xlsx의 3번째 행(Row 인덱스 3)에 고객번호 201013인 고객 정보를 채워서 반환
+    // ─────────────────────────────────────────────────────────────────────────────
+    @GetMapping("/regfiledownload")
+    public ResponseEntity<Resource> downloadRegFile() {
+        // 1. 고객번호 201013인 고객 조회
+        Customer customer = customerService.getCustomerById(201013);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        // 2. 템플릿 파일 regformat.xlsx를 classpath에서 로드
+        ClassPathResource templateResource = new ClassPathResource("excel_templates/regformat.xlsx");
+        if (!templateResource.exists()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+        // 3. 템플릿 파일을 임시 파일로 복사
+        File tempFile;
+        try {
+            tempFile = Files.createTempFile("regformat-", ".xlsx").toFile();
+            try (InputStream is = templateResource.getInputStream()) {
+                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+        // 4. 새로 추가한 fillRegFormat 메서드를 통해 고객 데이터를 템플릿 파일에 기록
+        try {
+            excelService.fillRegFormat(tempFile, customer);
+        } catch (IOException e) {
+            tempFile.delete();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+        // 5. 임시 파일의 내용을 메모리로 읽어 Resource로 변환
+        ByteArrayResource resource;
+        try {
+            byte[] fileBytes = Files.readAllBytes(tempFile.toPath());
+            resource = new ByteArrayResource(fileBytes);
+        } catch (IOException e) {
+            tempFile.delete();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+        // 6. 임시 파일 삭제 후 다운로드 응답 생성
+        tempFile.delete();
+        String downloadFilename = "regformat_download.xlsx";
+        String encodedFilename = UriUtils.encode(downloadFilename, StandardCharsets.UTF_8);
+        MediaType mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
+                .body(resource);
+    }
 }

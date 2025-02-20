@@ -36,7 +36,7 @@ public class CustomerController {
         } else {
             System.out.println("Deposits is null");
         }
-        Customer createdCustomer = customerService.createCustomer(customer);
+        Customer createdCustomer = customerService.createCustomer(customer,true);
         return ResponseEntity.ok(createdCustomer);
     }
 

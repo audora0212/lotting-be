@@ -42,6 +42,1258 @@ public class ExcelService {
     @Autowired
     private CustomerService customerService;
 
+    public void fillRegFormat(File tempFile, Customer customer) throws IOException {
+        try (FileInputStream fis = new FileInputStream(tempFile);
+             XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+
+            XSSFSheet sheet = workbook.getSheetAt(0);
+            org.apache.poi.ss.usermodel.Row row = sheet.getRow(3);
+            if (row == null) {
+                row = sheet.createRow(3);
+            }
+
+            // ── 기본 정보 ──
+            // Column A (0): 관리번호
+            Cell cellA = row.getCell(0);
+            if (cellA == null) cellA = row.createCell(0);
+            cellA.setCellValue(customer.getId());
+
+            // Column B (1): 분류(회원)
+            Cell cellB = row.getCell(1);
+            if (cellB == null) cellB = row.createCell(1);
+            cellB.setCellValue(customer.getCustomertype() != null ? customer.getCustomertype() : "");
+
+            // Column C (2): 타입
+            Cell cellC = row.getCell(2);
+            if (cellC == null) cellC = row.createCell(2);
+            cellC.setCellValue(customer.getType() != null ? customer.getType() : "");
+
+            // Column D (3): 군
+            Cell cellD = row.getCell(3);
+            if (cellD == null) cellD = row.createCell(3);
+            cellD.setCellValue(customer.getGroupname() != null ? customer.getGroupname() : "");
+
+            // Column E (4): 순번
+            Cell cellE = row.getCell(4);
+            if (cellE == null) cellE = row.createCell(4);
+            cellE.setCellValue(customer.getTurn() != null ? customer.getTurn() : "");
+
+            // Column F (5): 7차면제
+            Cell cellF = row.getCell(5);
+            if (cellF == null) cellF = row.createCell(5);
+            cellF.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getExemption7())) ? "o" : "");
+
+            // Column G (6): 임시동호
+            Cell cellG = row.getCell(6);
+            if (cellG == null) cellG = row.createCell(6);
+            cellG.setCellValue(customer.getTemptype() != null ? customer.getTemptype() : "");
+
+            // Column H (7): 가입차순
+            Cell cellH = row.getCell(7);
+            if (cellH == null) cellH = row.createCell(7);
+            cellH.setCellValue(customer.getBatch() != null ? customer.getBatch() : "");
+
+            // Column I (8): 신탁사제출
+            Cell cellI = row.getCell(8);
+            if (cellI == null) cellI = row.createCell(8);
+            cellI.setCellValue((customer.getFinancial() != null && customer.getFinancial().getTrustcompanydate() != null)
+                    ? customer.getFinancial().getTrustcompanydate().toString() : "");
+
+            // Column J (9): 가입일자
+            Cell cellJ = row.getCell(9);
+            if (cellJ == null) cellJ = row.createCell(9);
+            cellJ.setCellValue(customer.getRegisterdate() != null ? customer.getRegisterdate().toString() : "");
+
+            // Column K (10): 가입가
+            Cell cellK = row.getCell(10);
+            if (cellK == null) cellK = row.createCell(10);
+            cellK.setCellValue(customer.getRegisterprice() != null ? customer.getRegisterprice() : 0);
+
+            // Column L (11): 지산A동계약서
+            Cell cellL = row.getCell(11);
+            if (cellL == null) cellL = row.createCell(11);
+            cellL.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getContract())) ? "1" : "");
+
+            // Column M (12): 동의서
+            Cell cellM = row.getCell(12);
+            if (cellM == null) cellM = row.createCell(12);
+            cellM.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getAgreement())) ? "1" : "");
+
+            // Column N (13): 성명
+            Cell cellN = row.getCell(13);
+            if (cellN == null) cellN = row.createCell(13);
+            cellN.setCellValue((customer.getCustomerData() != null && customer.getCustomerData().getName() != null)
+                    ? customer.getCustomerData().getName() : "");
+
+            // Column O (14): 주민번호 (resnumfront-resnumback)
+            Cell cellO = row.getCell(14);
+            if (cellO == null) cellO = row.createCell(14);
+            if (customer.getCustomerData() != null
+                    && customer.getCustomerData().getResnumfront() != null
+                    && customer.getCustomerData().getResnumback() != null) {
+                cellO.setCellValue(customer.getCustomerData().getResnumfront() + "-" + customer.getCustomerData().getResnumback());
+            } else {
+                cellO.setCellValue("");
+            }
+
+            // Column P (15): 휴대전화
+            Cell cellP = row.getCell(15);
+            if (cellP == null) cellP = row.createCell(15);
+            cellP.setCellValue((customer.getCustomerData() != null && customer.getCustomerData().getPhone() != null)
+                    ? customer.getCustomerData().getPhone() : "");
+
+            // Column Q (16): 법정주소 우편번호
+            Cell cellQ2 = row.getCell(16);
+            if (cellQ2 == null) cellQ2 = row.createCell(16);
+            cellQ2.setCellValue((customer.getLegalAddress() != null && customer.getLegalAddress().getPostnumber() != null)
+                    ? customer.getLegalAddress().getPostnumber() : "");
+
+            // ── 법정주소 도/군 분리 ──
+            String legalPostFull = (customer.getLegalAddress() != null && customer.getLegalAddress().getPost() != null)
+                    ? customer.getLegalAddress().getPost() : "";
+            String[] legalParts = legalPostFull.split("\\s+");
+            String legalDo = legalParts.length >= 1 ? legalParts[0] : "";
+            String legalGun = legalParts.length >= 2 ? legalParts[1] : "";
+            // Column R (17): 법정주소 - 도
+            Cell cellR = row.getCell(17);
+            if (cellR == null) cellR = row.createCell(17);
+            cellR.setCellValue(legalDo);
+            // Column S (18): 법정주소 - 군
+            Cell cellS = row.getCell(18);
+            if (cellS == null) cellS = row.createCell(18);
+            cellS.setCellValue(legalGun);
+
+            // Column T (19): 법정주소 상세주소
+            Cell cellT = row.getCell(19);
+            if (cellT == null) cellT = row.createCell(19);
+            cellT.setCellValue((customer.getLegalAddress() != null && customer.getLegalAddress().getDetailaddress() != null)
+                    ? customer.getLegalAddress().getDetailaddress() : "");
+
+            // Column U (20): 금융기관 은행명
+            Cell cellU = row.getCell(20);
+            if (cellU == null) cellU = row.createCell(20);
+            cellU.setCellValue((customer.getFinancial() != null && customer.getFinancial().getBankname() != null)
+                    ? customer.getFinancial().getBankname() : "");
+
+            // Column V (21): 금융기관 계좌번호
+            Cell cellV = row.getCell(21);
+            if (cellV == null) cellV = row.createCell(21);
+            cellV.setCellValue((customer.getFinancial() != null && customer.getFinancial().getAccountnum() != null)
+                    ? customer.getFinancial().getAccountnum() : "");
+
+            // Column W (22): 금융기관 예금주
+            Cell cellW = row.getCell(22);
+            if (cellW == null) cellW = row.createCell(22);
+            cellW.setCellValue((customer.getFinancial() != null && customer.getFinancial().getAccountholder() != null)
+                    ? customer.getFinancial().getAccountholder() : "");
+
+            // Column X (23): 금융기관 신탁사
+            Cell cellX = row.getCell(23);
+            if (cellX == null) cellX = row.createCell(23);
+            cellX.setCellValue((customer.getFinancial() != null && customer.getFinancial().getTrustcompany() != null)
+                    ? customer.getFinancial().getTrustcompany() : "");
+
+            // Column Y (24): 예약금 납입일자
+            Cell cellY = row.getCell(24);
+            if (cellY == null) cellY = row.createCell(24);
+            cellY.setCellValue((customer.getDeposits() != null && customer.getDeposits().getDepositdate() != null)
+                    ? customer.getDeposits().getDepositdate().toString() : "");
+
+            // Column Z (25): 예약금 금액
+            Cell cellZ = row.getCell(25);
+            if (cellZ == null) cellZ = row.createCell(25);
+            cellZ.setCellValue((customer.getDeposits() != null && customer.getDeposits().getDepositammount() != null)
+                    ? customer.getDeposits().getDepositammount() : 0);
+
+            // ── Phase 데이터 ──
+            // Phase 1 (인덱스 0)
+            // Column AA (26): 1차 완납일자
+            Cell cellAA = row.getCell(26);
+            if (cellAA == null) cellAA = row.createCell(26);
+            cellAA.setCellValue((customer.getPhases() != null && customer.getPhases().size() > 0
+                    && customer.getPhases().get(0).getFullpaiddate() != null)
+                    ? customer.getPhases().get(0).getFullpaiddate().toString() : "");
+            // Column AB (27): 1차 부담금
+            Cell cellAB = row.getCell(27);
+            if (cellAB == null) cellAB = row.createCell(27);
+            cellAB.setCellValue((customer.getPhases() != null && customer.getPhases().size() > 0
+                    && customer.getPhases().get(0).getCharge() != null)
+                    ? customer.getPhases().get(0).getCharge() : 0);
+            // Column AC (28): 1차 업무대행비
+            Cell cellAC = row.getCell(28);
+            if (cellAC == null) cellAC = row.createCell(28);
+            cellAC.setCellValue((customer.getPhases() != null && customer.getPhases().size() > 0
+                    && customer.getPhases().get(0).getService() != null)
+                    ? customer.getPhases().get(0).getService() : 0);
+            // Column AD (29): 1차 이동
+            Cell cellAD = row.getCell(29);
+            if (cellAD == null) cellAD = row.createCell(29);
+            cellAD.setCellValue((customer.getPhases() != null && customer.getPhases().size() > 0
+                    && customer.getPhases().get(0).getMove() != null)
+                    ? customer.getPhases().get(0).getMove() : "");
+            // Column AE (30): 1차 합
+            Cell cellAE = row.getCell(30);
+            if (cellAE == null) cellAE = row.createCell(30);
+            cellAE.setCellValue((customer.getPhases() != null && customer.getPhases().size() > 0
+                    && customer.getPhases().get(0).getFeesum() != null)
+                    ? customer.getPhases().get(0).getFeesum() : 0);
+
+            // Phase 2 (인덱스 1) – 예정일자 조건 처리
+            // Column AF (31): 2차 예정일자
+            Cell cellAF = row.getCell(31);
+            if (cellAF == null) cellAF = row.createCell(31);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                if (phase2.getPlanneddate() != null && !phase2.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellAF.setCellValue(phase2.getPlanneddate().toString());
+                } else {
+                    cellAF.setCellValue(phase2.getPlanneddateString() != null ? phase2.getPlanneddateString() : "");
+                }
+            } else {
+                cellAF.setCellValue("");
+            }
+            // Column AG (32): 2차 완납일자
+            Cell cellAG = row.getCell(32);
+            if (cellAG == null) cellAG = row.createCell(32);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAG.setCellValue(phase2.getFullpaiddate() != null ? phase2.getFullpaiddate().toString() : "");
+            } else {
+                cellAG.setCellValue("");
+            }
+            // Column AH (33): 2차 부담금
+            Cell cellAH = row.getCell(33);
+            if (cellAH == null) cellAH = row.createCell(33);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAH.setCellValue(phase2.getCharge() != null ? phase2.getCharge() : 0);
+            } else {
+                cellAH.setCellValue(0);
+            }
+            // Column AI (34): 2차 할인액
+            Cell cellAI = row.getCell(34);
+            if (cellAI == null) cellAI = row.createCell(34);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAI.setCellValue(phase2.getDiscount() != null ? Math.abs(phase2.getDiscount()) : 0);
+            } else {
+                cellAI.setCellValue(0);
+            }
+            // Column AJ (35): 2차 업무대행비
+            Cell cellAJ = row.getCell(35);
+            if (cellAJ == null) cellAJ = row.createCell(35);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAJ.setCellValue(phase2.getService() != null ? phase2.getService() : 0);
+            } else {
+                cellAJ.setCellValue(0);
+            }
+            // Column AK (36): 2차 이동
+            Cell cellAK = row.getCell(36);
+            if (cellAK == null) cellAK = row.createCell(36);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAK.setCellValue(phase2.getMove() != null ? phase2.getMove() : "");
+            } else {
+                cellAK.setCellValue("");
+            }
+            // Column AL (37): 2차 합
+            Cell cellAL = row.getCell(37);
+            if (cellAL == null) cellAL = row.createCell(37);
+            if (customer.getPhases() != null && customer.getPhases().size() > 1) {
+                Phase phase2 = customer.getPhases().get(1);
+                cellAL.setCellValue(phase2.getFeesum() != null ? phase2.getFeesum() : 0);
+            } else {
+                cellAL.setCellValue(0);
+            }
+
+            // Phase 3 (인덱스 2) – 예정일자 조건 처리
+            // Column AM (38): 3차 예정일자
+            Cell cellAM = row.getCell(38);
+            if (cellAM == null) cellAM = row.createCell(38);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                if (phase3.getPlanneddate() != null && !phase3.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellAM.setCellValue(phase3.getPlanneddate().toString());
+                } else {
+                    cellAM.setCellValue(phase3.getPlanneddateString() != null ? phase3.getPlanneddateString() : "");
+                }
+            } else {
+                cellAM.setCellValue("");
+            }
+            // Column AN (39): 3차 완납일자
+            Cell cellAN = row.getCell(39);
+            if (cellAN == null) cellAN = row.createCell(39);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAN.setCellValue(phase3.getFullpaiddate() != null ? phase3.getFullpaiddate().toString() : "");
+            } else {
+                cellAN.setCellValue("");
+            }
+            // Column AO (40): 3차 부담금
+            Cell cellAO = row.getCell(40);
+            if (cellAO == null) cellAO = row.createCell(40);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAO.setCellValue(phase3.getCharge() != null ? phase3.getCharge() : 0);
+            } else {
+                cellAO.setCellValue(0);
+            }
+            // Column AP (41): 3차 할인액
+            Cell cellAP = row.getCell(41);
+            if (cellAP == null) cellAP = row.createCell(41);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAP.setCellValue(phase3.getDiscount() != null ? Math.abs(phase3.getDiscount()) : 0);
+            } else {
+                cellAP.setCellValue(0);
+            }
+            // Column AQ (42): 3차 업무대행비
+            Cell cellAQ = row.getCell(42);
+            if (cellAQ == null) cellAQ = row.createCell(42);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAQ.setCellValue(phase3.getService() != null ? phase3.getService() : 0);
+            } else {
+                cellAQ.setCellValue(0);
+            }
+            // Column AR (43): 3차 이동
+            Cell cellAR = row.getCell(43);
+            if (cellAR == null) cellAR = row.createCell(43);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAR.setCellValue(phase3.getMove() != null ? phase3.getMove() : "");
+            } else {
+                cellAR.setCellValue("");
+            }
+            // Column AS (44): 3차 합
+            Cell cellAS = row.getCell(44);
+            if (cellAS == null) cellAS = row.createCell(44);
+            if (customer.getPhases() != null && customer.getPhases().size() > 2) {
+                Phase phase3 = customer.getPhases().get(2);
+                cellAS.setCellValue(phase3.getFeesum() != null ? phase3.getFeesum() : 0);
+            } else {
+                cellAS.setCellValue(0);
+            }
+
+            // Phase 4 (인덱스 3) – 예정일자 조건 처리
+            // Column AT (45): 4차 예정일자
+            Cell cellAT = row.getCell(45);
+            if (cellAT == null) cellAT = row.createCell(45);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                if (phase4.getPlanneddate() != null && !phase4.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellAT.setCellValue(phase4.getPlanneddate().toString());
+                } else {
+                    cellAT.setCellValue(phase4.getPlanneddateString() != null ? phase4.getPlanneddateString() : "");
+                }
+            } else {
+                cellAT.setCellValue("");
+            }
+            // Column AU (46): 4차 완납일자
+            Cell cellAU = row.getCell(46);
+            if (cellAU == null) cellAU = row.createCell(46);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAU.setCellValue(phase4.getFullpaiddate() != null ? phase4.getFullpaiddate().toString() : "");
+            } else {
+                cellAU.setCellValue("");
+            }
+            // Column AV (47): 4차 부담금
+            Cell cellAV = row.getCell(47);
+            if (cellAV == null) cellAV = row.createCell(47);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAV.setCellValue(phase4.getCharge() != null ? phase4.getCharge() : 0);
+            } else {
+                cellAV.setCellValue(0);
+            }
+            // Column AW (48): 4차 할인액
+            Cell cellAW = row.getCell(48);
+            if (cellAW == null) cellAW = row.createCell(48);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAW.setCellValue(phase4.getDiscount() != null ? Math.abs(phase4.getDiscount()) : 0);
+            } else {
+                cellAW.setCellValue(0);
+            }
+            // Column AX (49): 4차 업무대행비
+            Cell cellAX = row.getCell(49);
+            if (cellAX == null) cellAX = row.createCell(49);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAX.setCellValue(phase4.getService() != null ? phase4.getService() : 0);
+            } else {
+                cellAX.setCellValue(0);
+            }
+            // Column AY (50): 4차 이동
+            Cell cellAY = row.getCell(50);
+            if (cellAY == null) cellAY = row.createCell(50);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAY.setCellValue(phase4.getMove() != null ? phase4.getMove() : "");
+            } else {
+                cellAY.setCellValue("");
+            }
+            // Column AZ (51): 4차 합
+            Cell cellAZ = row.getCell(51);
+            if (cellAZ == null) cellAZ = row.createCell(51);
+            if (customer.getPhases() != null && customer.getPhases().size() > 3) {
+                Phase phase4 = customer.getPhases().get(3);
+                cellAZ.setCellValue(phase4.getFeesum() != null ? phase4.getFeesum() : 0);
+            } else {
+                cellAZ.setCellValue(0);
+            }
+
+            // Phase 5 (인덱스 4) – 예정일자 조건 처리
+            // Column BA (52): 5차 예정일자
+            Cell cellBA = row.getCell(52);
+            if (cellBA == null) cellBA = row.createCell(52);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                if (phase5.getPlanneddate() != null && !phase5.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellBA.setCellValue(phase5.getPlanneddate().toString());
+                } else {
+                    cellBA.setCellValue(phase5.getPlanneddateString() != null ? phase5.getPlanneddateString() : "");
+                }
+            } else {
+                cellBA.setCellValue("");
+            }
+            // Column BB (53): 5차 완납일자
+            Cell cellBB = row.getCell(53);
+            if (cellBB == null) cellBB = row.createCell(53);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBB.setCellValue(phase5.getFullpaiddate() != null ? phase5.getFullpaiddate().toString() : "");
+            } else {
+                cellBB.setCellValue("");
+            }
+            // Column BC (54): 5차 부담금
+            Cell cellBC = row.getCell(54);
+            if (cellBC == null) cellBC = row.createCell(54);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBC.setCellValue(phase5.getCharge() != null ? phase5.getCharge() : 0);
+            } else {
+                cellBC.setCellValue(0);
+            }
+            // Column BD (55): 5차 할인액
+            Cell cellBD = row.getCell(55);
+            if (cellBD == null) cellBD = row.createCell(55);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBD.setCellValue(phase5.getDiscount() != null ? Math.abs(phase5.getDiscount()) : 0);
+            } else {
+                cellBD.setCellValue(0);
+            }
+            // Column BE (56): 5차 면제금액
+            Cell cellBE = row.getCell(56);
+            if (cellBE == null) cellBE = row.createCell(56);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBE.setCellValue(phase5.getExemption() != null ? Math.abs(phase5.getExemption()) : 0);
+            } else {
+                cellBE.setCellValue(0);
+            }
+            // Column BF (57): 5차 업무대행비
+            Cell cellBF = row.getCell(57);
+            if (cellBF == null) cellBF = row.createCell(57);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBF.setCellValue(phase5.getService() != null ? phase5.getService() : 0);
+            } else {
+                cellBF.setCellValue(0);
+            }
+            // Column BG (58): 5차 이동
+            Cell cellBG = row.getCell(58);
+            if (cellBG == null) cellBG = row.createCell(58);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBG.setCellValue(phase5.getMove() != null ? phase5.getMove() : "");
+            } else {
+                cellBG.setCellValue("");
+            }
+            // Column BH (59): 5차 합
+            Cell cellBH = row.getCell(59);
+            if (cellBH == null) cellBH = row.createCell(59);
+            if (customer.getPhases() != null && customer.getPhases().size() > 4) {
+                Phase phase5 = customer.getPhases().get(4);
+                cellBH.setCellValue(phase5.getFeesum() != null ? phase5.getFeesum() : 0);
+            } else {
+                cellBH.setCellValue(0);
+            }
+
+            // Phase 6 (인덱스 5) – 예정일자 조건 처리
+            // Column BI (60): 6차 예정일자
+            Cell cellBI = row.getCell(60);
+            if (cellBI == null) cellBI = row.createCell(60);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                if (phase6.getPlanneddate() != null && !phase6.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellBI.setCellValue(phase6.getPlanneddate().toString());
+                } else {
+                    cellBI.setCellValue(phase6.getPlanneddateString() != null ? phase6.getPlanneddateString() : "");
+                }
+            } else {
+                cellBI.setCellValue("");
+            }
+            // Column BJ (61): 6차 완납일자
+            Cell cellBJ = row.getCell(61);
+            if (cellBJ == null) cellBJ = row.createCell(61);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBJ.setCellValue(phase6.getFullpaiddate() != null ? phase6.getFullpaiddate().toString() : "");
+            } else {
+                cellBJ.setCellValue("");
+            }
+            // Column BK (62): 6차 부담금
+            Cell cellBK = row.getCell(62);
+            if (cellBK == null) cellBK = row.createCell(62);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBK.setCellValue(phase6.getCharge() != null ? phase6.getCharge() : 0);
+            } else {
+                cellBK.setCellValue(0);
+            }
+            // Column BL (63): 6차 할인액
+            Cell cellBL = row.getCell(63);
+            if (cellBL == null) cellBL = row.createCell(63);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBL.setCellValue(phase6.getDiscount() != null ? Math.abs(phase6.getDiscount()) : 0);
+            } else {
+                cellBL.setCellValue(0);
+            }
+            // Column BM (64): 6차 면제금액
+            Cell cellBM = row.getCell(64);
+            if (cellBM == null) cellBM = row.createCell(64);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBM.setCellValue(phase6.getExemption() != null ? Math.abs(phase6.getExemption()) : 0);
+            } else {
+                cellBM.setCellValue(0);
+            }
+            // Column BN (65): 6차 업무대행비
+            Cell cellBN = row.getCell(65);
+            if (cellBN == null) cellBN = row.createCell(65);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBN.setCellValue(phase6.getService() != null ? phase6.getService() : 0);
+            } else {
+                cellBN.setCellValue(0);
+            }
+            // Column BO (66): 6차 이동
+            Cell cellBO = row.getCell(66);
+            if (cellBO == null) cellBO = row.createCell(66);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBO.setCellValue(phase6.getMove() != null ? phase6.getMove() : "");
+            } else {
+                cellBO.setCellValue("");
+            }
+            // Column BP (67): 6차 합
+            Cell cellBP = row.getCell(67);
+            if (cellBP == null) cellBP = row.createCell(67);
+            if (customer.getPhases() != null && customer.getPhases().size() > 5) {
+                Phase phase6 = customer.getPhases().get(5);
+                cellBP.setCellValue(phase6.getFeesum() != null ? phase6.getFeesum() : 0);
+            } else {
+                cellBP.setCellValue(0);
+            }
+
+            // Phase 7 (인덱스 6) – 예정일자 조건 처리
+            // Column BQ (68): 7차 예정일자
+            Cell cellBQ = row.getCell(68);
+            if (cellBQ == null) cellBQ = row.createCell(68);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                if (phase7.getPlanneddate() != null && !phase7.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellBQ.setCellValue(phase7.getPlanneddate().toString());
+                } else {
+                    cellBQ.setCellValue(phase7.getPlanneddateString() != null ? phase7.getPlanneddateString() : "");
+                }
+            } else {
+                cellBQ.setCellValue("");
+            }
+            // Column BR (69): 7차 완납일자
+            Cell cellBR = row.getCell(69);
+            if (cellBR == null) cellBR = row.createCell(69);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBR.setCellValue(phase7.getFullpaiddate() != null ? phase7.getFullpaiddate().toString() : "");
+            } else {
+                cellBR.setCellValue("");
+            }
+            // Column BS (70): 7차 부담금
+            Cell cellBS = row.getCell(70);
+            if (cellBS == null) cellBS = row.createCell(70);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBS.setCellValue(phase7.getCharge() != null ? phase7.getCharge() : 0);
+            } else {
+                cellBS.setCellValue(0);
+            }
+            // Column BT (71): 7차 할인액
+            Cell cellBT = row.getCell(71);
+            if (cellBT == null) cellBT = row.createCell(71);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBT.setCellValue(phase7.getDiscount() != null ? Math.abs(phase7.getDiscount()) : 0);
+            } else {
+                cellBT.setCellValue(0);
+            }
+            // Column BU (72): 7차 면제금액
+            Cell cellBU = row.getCell(72);
+            if (cellBU == null) cellBU = row.createCell(72);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBU.setCellValue(phase7.getExemption() != null ? Math.abs(phase7.getExemption()) : 0);
+            } else {
+                cellBU.setCellValue(0);
+            }
+            // Column BV (73): 7차 업무대행비
+            Cell cellBV = row.getCell(73);
+            if (cellBV == null) cellBV = row.createCell(73);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBV.setCellValue(phase7.getService() != null ? phase7.getService() : 0);
+            } else {
+                cellBV.setCellValue(0);
+            }
+            // Column BW (74): 7차 이동
+            Cell cellBW = row.getCell(74);
+            if (cellBW == null) cellBW = row.createCell(74);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBW.setCellValue(phase7.getMove() != null ? phase7.getMove() : "");
+            } else {
+                cellBW.setCellValue("");
+            }
+            // Column BX (75): 7차 합
+            Cell cellBX = row.getCell(75);
+            if (cellBX == null) cellBX = row.createCell(75);
+            if (customer.getPhases() != null && customer.getPhases().size() > 6) {
+                Phase phase7 = customer.getPhases().get(6);
+                cellBX.setCellValue(phase7.getFeesum() != null ? phase7.getFeesum() : 0);
+            } else {
+                cellBX.setCellValue(0);
+            }
+
+            // Phase 8 (인덱스 7) – 예정일자 조건 처리
+            // Column BY (76): 8차 예정일자
+            Cell cellBY = row.getCell(76);
+            if (cellBY == null) cellBY = row.createCell(76);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                if (phase8.getPlanneddate() != null && !phase8.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellBY.setCellValue(phase8.getPlanneddate().toString());
+                } else {
+                    cellBY.setCellValue(phase8.getPlanneddateString() != null ? phase8.getPlanneddateString() : "");
+                }
+            } else {
+                cellBY.setCellValue("");
+            }
+            // Column BZ (77): 8차 완납일자
+            Cell cellBZ = row.getCell(77);
+            if (cellBZ == null) cellBZ = row.createCell(77);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellBZ.setCellValue(phase8.getFullpaiddate() != null ? phase8.getFullpaiddate().toString() : "");
+            } else {
+                cellBZ.setCellValue("");
+            }
+            // Column CA (78): 8차 부담금
+            Cell cellCA = row.getCell(78);
+            if (cellCA == null) cellCA = row.createCell(78);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellCA.setCellValue(phase8.getCharge() != null ? phase8.getCharge() : 0);
+            } else {
+                cellCA.setCellValue(0);
+            }
+            // Column CB (79): 8차 할인액
+            Cell cellCB = row.getCell(79);
+            if (cellCB == null) cellCB = row.createCell(79);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellCB.setCellValue(phase8.getDiscount() != null ? Math.abs(phase8.getDiscount()) : 0);
+            } else {
+                cellCB.setCellValue(0);
+            }
+            // Column CC (80): 8차 업무대행비
+            Cell cellCC = row.getCell(80);
+            if (cellCC == null) cellCC = row.createCell(80);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellCC.setCellValue(phase8.getService() != null ? phase8.getService() : 0);
+            } else {
+                cellCC.setCellValue(0);
+            }
+            // Column CD (81): 8차 이동
+            Cell cellCD = row.getCell(81);
+            if (cellCD == null) cellCD = row.createCell(81);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellCD.setCellValue(phase8.getMove() != null ? phase8.getMove() : "");
+            } else {
+                cellCD.setCellValue("");
+            }
+            // Column CE (82): 8차 합
+            Cell cellCE = row.getCell(82);
+            if (cellCE == null) cellCE = row.createCell(82);
+            if (customer.getPhases() != null && customer.getPhases().size() > 7) {
+                Phase phase8 = customer.getPhases().get(7);
+                cellCE.setCellValue(phase8.getFeesum() != null ? phase8.getFeesum() : 0);
+            } else {
+                cellCE.setCellValue(0);
+            }
+
+            // Phase 9 (인덱스 8) – 예정일자 조건 처리
+            // Column CF (83): 9차 예정일자
+            Cell cellCF = row.getCell(83);
+            if (cellCF == null) cellCF = row.createCell(83);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                if (phase9.getPlanneddate() != null && !phase9.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellCF.setCellValue(phase9.getPlanneddate().toString());
+                } else {
+                    cellCF.setCellValue(phase9.getPlanneddateString() != null ? phase9.getPlanneddateString() : "");
+                }
+            } else {
+                cellCF.setCellValue("");
+            }
+            // Column CG (84): 9차 완납일자
+            Cell cellCG = row.getCell(84);
+            if (cellCG == null) cellCG = row.createCell(84);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCG.setCellValue(phase9.getFullpaiddate() != null ? phase9.getFullpaiddate().toString() : "");
+            } else {
+                cellCG.setCellValue("");
+            }
+            // Column CH (85): 9차 부담금
+            Cell cellCH = row.getCell(85);
+            if (cellCH == null) cellCH = row.createCell(85);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCH.setCellValue(phase9.getCharge() != null ? phase9.getCharge() : 0);
+            } else {
+                cellCH.setCellValue(0);
+            }
+            // Column CI (86): 9차 할인액
+            Cell cellCI = row.getCell(86);
+            if (cellCI == null) cellCI = row.createCell(86);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCI.setCellValue(phase9.getDiscount() != null ? Math.abs(phase9.getDiscount()) : 0);
+            } else {
+                cellCI.setCellValue(0);
+            }
+            // Column CJ (87): 9차 업무대행비
+            Cell cellCJ = row.getCell(87);
+            if (cellCJ == null) cellCJ = row.createCell(87);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCJ.setCellValue(phase9.getService() != null ? phase9.getService() : 0);
+            } else {
+                cellCJ.setCellValue(0);
+            }
+            // Column CK (88): 9차 이동
+            Cell cellCK = row.getCell(88);
+            if (cellCK == null) cellCK = row.createCell(88);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCK.setCellValue(phase9.getMove() != null ? phase9.getMove() : "");
+            } else {
+                cellCK.setCellValue("");
+            }
+            // Column CL (89): 9차 합
+            Cell cellCL = row.getCell(89);
+            if (cellCL == null) cellCL = row.createCell(89);
+            if (customer.getPhases() != null && customer.getPhases().size() > 8) {
+                Phase phase9 = customer.getPhases().get(8);
+                cellCL.setCellValue(phase9.getFeesum() != null ? phase9.getFeesum() : 0);
+            } else {
+                cellCL.setCellValue(0);
+            }
+
+            // Phase 10 (인덱스 9) – 예정일자 조건 처리
+            // Column CM (90): 10차 예정일자
+            Cell cellCM = row.getCell(90);
+            if (cellCM == null) cellCM = row.createCell(90);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                if (phase10.getPlanneddate() != null && !phase10.getPlanneddate().equals(LocalDate.of(2100, 1, 1))) {
+                    cellCM.setCellValue(phase10.getPlanneddate().toString());
+                } else {
+                    cellCM.setCellValue(phase10.getPlanneddateString() != null ? phase10.getPlanneddateString() : "");
+                }
+            } else {
+                cellCM.setCellValue("");
+            }
+            // Column CN (91): 10차 완납일자
+            Cell cellCN = row.getCell(91);
+            if (cellCN == null) cellCN = row.createCell(91);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCN.setCellValue(phase10.getFullpaiddate() != null ? phase10.getFullpaiddate().toString() : "");
+            } else {
+                cellCN.setCellValue("");
+            }
+            // Column CO (92): 10차 부담금
+            Cell cellCO = row.getCell(92);
+            if (cellCO == null) cellCO = row.createCell(92);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCO.setCellValue(phase10.getCharge() != null ? phase10.getCharge() : 0);
+            } else {
+                cellCO.setCellValue(0);
+            }
+            // Column CP (93): 10차 할인액
+            Cell cellCP = row.getCell(93);
+            if (cellCP == null) cellCP = row.createCell(93);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCP.setCellValue(phase10.getDiscount() != null ? Math.abs(phase10.getDiscount()) : 0);
+            } else {
+                cellCP.setCellValue(0);
+            }
+            // Column CQ (94): 10차 업무대행비
+            Cell cellCQ = row.getCell(94);
+            if (cellCQ == null) cellCQ = row.createCell(94);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCQ.setCellValue(phase10.getService() != null ? phase10.getService() : 0);
+            } else {
+                cellCQ.setCellValue(0);
+            }
+            // Column CR (95): 10차 이동
+            Cell cellCR = row.getCell(95);
+            if (cellCR == null) cellCR = row.createCell(95);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCR.setCellValue(phase10.getMove() != null ? phase10.getMove() : "");
+            } else {
+                cellCR.setCellValue("");
+            }
+            // Column CS (96): 10차 합
+            Cell cellCS = row.getCell(96);
+            if (cellCS == null) cellCS = row.createCell(96);
+            if (customer.getPhases() != null && customer.getPhases().size() > 9) {
+                Phase phase10 = customer.getPhases().get(9);
+                cellCS.setCellValue(phase10.getFeesum() != null ? phase10.getFeesum() : 0);
+            } else {
+                cellCS.setCellValue(0);
+            }
+
+            // ── 최종 섹션 ──
+            // Column DA (104): 총 면제금액
+            Cell cellDA = row.getCell(104);
+            if (cellDA == null) cellDA = row.createCell(104);
+            cellDA.setCellValue((customer.getStatus() != null && customer.getStatus().getExemptionsum() != null)
+                    ? customer.getStatus().getExemptionsum() : 0);
+
+            // Column DB (105): 해약 해지일자
+            Cell cellDB = row.getCell(105);
+            if (cellDB == null) cellDB = row.createCell(105);
+            cellDB.setCellValue((customer.getCancel() != null && customer.getCancel().getCanceldate() != null)
+                    ? customer.getCancel().getCanceldate().toString() : "");
+
+            // Column DC (106): 해약 환급일자
+            Cell cellDC = row.getCell(106);
+            if (cellDC == null) cellDC = row.createCell(106);
+            cellDC.setCellValue((customer.getCancel() != null && customer.getCancel().getRefunddate() != null)
+                    ? customer.getCancel().getRefunddate().toString() : "");
+
+            // Column DD (107): 해약 환급금
+            Cell cellDD = row.getCell(107);
+            if (cellDD == null) cellDD = row.createCell(107);
+            cellDD.setCellValue((customer.getCancel() != null && customer.getCancel().getRefundamount() != null)
+                    ? customer.getCancel().getRefundamount() : 0);
+
+            // Column DE (108): 납입총액
+            Cell cellDE = row.getCell(108);
+            if (cellDE == null) cellDE = row.createCell(108);
+            cellDE.setCellValue((customer.getStatus() != null && customer.getStatus().getAmmountsum() != null)
+                    ? customer.getStatus().getAmmountsum() : 0);
+
+            // Column DF (109): 건너뛰기
+            Cell cellDF = row.getCell(109);
+            if (cellDF == null) cellDF = row.createCell(109);
+            cellDF.setCellValue("");
+
+            // Column DG (110): 담당 총괄
+            Cell cellDG = row.getCell(110);
+            if (cellDG == null) cellDG = row.createCell(110);
+            cellDG.setCellValue((customer.getResponsible() != null && customer.getResponsible().getGeneralmanagement() != null)
+                    ? customer.getResponsible().getGeneralmanagement() : "");
+
+            // Column DH (111): 담당 본부
+            Cell cellDH = row.getCell(111);
+            if (cellDH == null) cellDH = row.createCell(111);
+            cellDH.setCellValue((customer.getResponsible() != null && customer.getResponsible().getDivision() != null)
+                    ? customer.getResponsible().getDivision() : "");
+
+            // Column DI (112): 담당 팀
+            Cell cellDI = row.getCell(112);
+            if (cellDI == null) cellDI = row.createCell(112);
+            cellDI.setCellValue((customer.getResponsible() != null && customer.getResponsible().getTeam() != null)
+                    ? customer.getResponsible().getTeam() : "");
+
+            // Column DJ (113): 담당 성명
+            Cell cellDJ = row.getCell(113);
+            if (cellDJ == null) cellDJ = row.createCell(113);
+            cellDJ.setCellValue((customer.getResponsible() != null && customer.getResponsible().getManagername() != null)
+                    ? customer.getResponsible().getManagername() : "");
+
+            // Column DK (114): 담당 수수료지급
+            Cell cellDK = row.getCell(114);
+            if (cellDK == null) cellDK = row.createCell(114);
+            cellDK.setCellValue((customer.getResponsible() != null && customer.getResponsible().getFeepaid() != null)
+                    ? customer.getResponsible().getFeepaid() : "");
+
+            // Column DL (115): 다힘 시상
+            Cell cellDL = row.getCell(115);
+            if (cellDL == null) cellDL = row.createCell(115);
+            cellDL.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimsisang() != null)
+                    ? customer.getDahim().getDahimsisang() : "");
+
+            // Column DM (116): 다힘 일자
+            Cell cellDM = row.getCell(116);
+            if (cellDM == null) cellDM = row.createCell(116);
+            cellDM.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimdate() != null)
+                    ? customer.getDahim().getDahimdate().toString() : "");
+
+            // Column DN (117): 다힘 6/30선지급
+            Cell cellDN = row.getCell(117);
+            if (cellDN == null) cellDN = row.createCell(117);
+            cellDN.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimprepaid() != null)
+                    ? customer.getDahim().getDahimprepaid() : "");
+
+            // Column DO (118): 다힘 1회차청구
+            Cell cellDO = row.getCell(118);
+            if (cellDO == null) cellDO = row.createCell(118);
+            cellDO.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimfirst() != null)
+                    ? customer.getDahim().getDahimfirst() : "");
+
+            // Column DP (119): 다힘 (1회차)금액
+            Cell cellDP = row.getCell(119);
+            if (cellDP == null) cellDP = row.createCell(119);
+            cellDP.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimfirstpay() != null)
+                    ? customer.getDahim().getDahimfirstpay() : "");
+
+            // Column DQ (120): 다힘 일자2 – 날짜형 우선, 없으면 문자열
+            Cell cellDQ = row.getCell(120);
+            if (cellDQ == null) cellDQ = row.createCell(120);
+            LocalDate dateDQ = getUnderlyingDate(cellDQ);
+            if (dateDQ != null) {
+                cellDQ.setCellValue(dateDQ.toString());
+            } else {
+                cellDQ.setCellValue(cellDQ.getStringCellValue());
+            }
+
+            // Column DR (121): 다힘 출처
+            Cell cellDR = row.getCell(121);
+            if (cellDR == null) cellDR = row.createCell(121);
+            cellDR.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimsource() != null)
+                    ? customer.getDahim().getDahimsource() : "");
+
+            // Column DS (122): 다힘 2회차청구
+            Cell cellDS = row.getCell(122);
+            if (cellDS == null) cellDS = row.createCell(122);
+            cellDS.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimsecond() != null)
+                    ? customer.getDahim().getDahimsecond() : "");
+
+            // Column DT (123): 다힘 (2회차)금액
+            Cell cellDT = row.getCell(123);
+            if (cellDT == null) cellDT = row.createCell(123);
+            cellDT.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimsecondpay() != null)
+                    ? customer.getDahim().getDahimsecondpay() : "");
+
+            // Column DU (124): 다힘 일자3 – 날짜형 우선, 없으면 문자열
+            Cell cellDU = row.getCell(124);
+            if (cellDU == null) cellDU = row.createCell(124);
+            LocalDate dateDU = getUnderlyingDate(cellDU);
+            if (dateDU != null) {
+                cellDU.setCellValue(dateDU.toString());
+            } else {
+                cellDU.setCellValue(cellDU.getStringCellValue());
+            }
+
+            // Column DV (125): 다힘 합계
+            Cell cellDV = row.getCell(125);
+            if (cellDV == null) cellDV = row.createCell(125);
+            cellDV.setCellValue((customer.getDahim() != null && customer.getDahim().getDahimsum() != null)
+                    ? customer.getDahim().getDahimsum() : "");
+
+            // Column DW (126): MGM 수수료 (숫자 그대로)
+            Cell cellDW = row.getCell(126);
+            if (cellDW == null) cellDW = row.createCell(126);
+            cellDW.setCellType(CellType.NUMERIC);
+            cellDW.setCellValue((customer.getMgm() != null && customer.getMgm().getMgmfee() != null)
+                    ? customer.getMgm().getMgmfee() : 0);
+
+            // Column DX (127): MGM 업체명
+            Cell cellDX = row.getCell(127);
+            if (cellDX == null) cellDX = row.createCell(127);
+            cellDX.setCellValue((customer.getMgm() != null && customer.getMgm().getMgmcompanyname() != null)
+                    ? customer.getMgm().getMgmcompanyname() : "");
+
+            // Column DY (128): MGM 이름
+            Cell cellDY = row.getCell(128);
+            if (cellDY == null) cellDY = row.createCell(128);
+            cellDY.setCellValue((customer.getMgm() != null && customer.getMgm().getMgmname() != null)
+                    ? customer.getMgm().getMgmname() : "");
+
+            // Column DZ (129): MGM 기관
+            Cell cellDZ = row.getCell(129);
+            if (cellDZ == null) cellDZ = row.createCell(129);
+            cellDZ.setCellValue((customer.getMgm() != null && customer.getMgm().getMgminstitution() != null)
+                    ? customer.getMgm().getMgminstitution() : "");
+
+            // Column EA (130): MGM 계좌
+            Cell cellEA = row.getCell(130);
+            if (cellEA == null) cellEA = row.createCell(130);
+            cellEA.setCellValue((customer.getMgm() != null && customer.getMgm().getMgmaccount() != null)
+                    ? customer.getMgm().getMgmaccount() : "");
+
+            // Column EB (131): 1차(직원) 차순
+            Cell cellEB = row.getCell(131);
+            if (cellEB == null) cellEB = row.createCell(131);
+            cellEB.setCellValue((customer.getFirstemp() != null && customer.getFirstemp().getFirstemptimes() != null)
+                    ? customer.getFirstemp().getFirstemptimes() : "");
+
+            // Column EC (132): 1차 지급일자
+            Cell cellEC = row.getCell(132);
+            if (cellEC == null) cellEC = row.createCell(132);
+            cellEC.setCellValue((customer.getFirstemp() != null && customer.getFirstemp().getFirstempdate() != null)
+                    ? customer.getFirstemp().getFirstempdate().toString() : "");
+
+            // Column ED (133): 2차(직원) 차순
+            Cell cellED = row.getCell(133);
+            if (cellED == null) cellED = row.createCell(133);
+            cellED.setCellValue((customer.getSecondemp() != null && customer.getSecondemp().getSecondemptimes() != null)
+                    ? customer.getSecondemp().getSecondemptimes() : "");
+
+            // Column EE (134): 2차 지급일자
+            Cell cellEE = row.getCell(134);
+            if (cellEE == null) cellEE = row.createCell(134);
+            cellEE.setCellValue((customer.getSecondemp() != null && customer.getSecondemp().getSecondempdate() != null)
+                    ? customer.getSecondemp().getSecondempdate().toString() : "");
+
+            // Column EF (135): 부속서류 인감증명서
+            Cell cellEF = row.getCell(135);
+            if (cellEF == null) cellEF = row.createCell(135);
+            cellEF.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getSealcertificateprovided())) ? "o" : "");
+
+            // Column EG (136): 부속서류 본인서명확인서
+            Cell cellEG = row.getCell(136);
+            if (cellEG == null) cellEG = row.createCell(136);
+            cellEG.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getSelfsignatureconfirmationprovided())) ? "o" : "");
+
+            // Column EH (137): 부속서류 신분증
+            Cell cellEH = row.getCell(137);
+            if (cellEH == null) cellEH = row.createCell(137);
+            cellEH.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getIdcopyprovided())) ? "o" : "");
+
+            // Column EI (138): 부속서류 확약서
+            Cell cellEI = row.getCell(138);
+            if (cellEI == null) cellEI = row.createCell(138);
+            cellEI.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getCommitmentletterprovided())) ? "o" : "");
+
+            // Column EJ (139): 부속서류 창준위용
+            Cell cellEJ = row.getCell(139);
+            if (cellEJ == null) cellEJ = row.createCell(139);
+            cellEJ.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getForfounding())) ? "o" : "");
+
+            // Column EK (140): 부속서류 무상옵션
+            Cell cellEK = row.getCell(140);
+            if (cellEK == null) cellEK = row.createCell(140);
+            cellEK.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getFreeoption())) ? "o" : "");
+
+            // Column EL (141): 부속서류 선호도조사
+            Cell cellEL = row.getCell(141);
+            if (cellEL == null) cellEL = row.createCell(141);
+            cellEL.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getPreferenceattachment())) ? "o" : "");
+
+            // Column EM (142): 부속서류 총회동의서
+            Cell cellEM = row.getCell(142);
+            if (cellEM == null) cellEM = row.createCell(142);
+            cellEM.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getPrizeattachment())) ? "o" : "");
+
+            // Column EN (143): 부속서류 사은품 지급일자
+            Cell cellEN = row.getCell(143);
+            if (cellEN == null) cellEN = row.createCell(143);
+            cellEN.setCellValue((customer.getAttachments() != null
+                    && customer.getAttachments().getPrizedate() != null)
+                    ? customer.getAttachments().getPrizedate().toString() : "");
+
+            // Column EO (144): 이메일
+            Cell cellEO = row.getCell(144);
+            if (cellEO == null) cellEO = row.createCell(144);
+            cellEO.setCellValue((customer.getCustomerData() != null
+                    && customer.getCustomerData().getEmail() != null)
+                    ? customer.getCustomerData().getEmail() : "");
+
+            // Column EP (145): 우편물수령주소 우편번호 (이미 처리됨)
+
+            // Column EQ (146) & ER (147) – 우편물수령주소 도/군는 이미 분리하여 처리함
+            // Column ES (148): 우편물수령주소 상세주소
+            Cell cellES = row.getCell(148);
+            if (cellES == null) cellES = row.createCell(148);
+            cellES.setCellValue((customer.getPostreceive() != null
+                    && customer.getPostreceive().getDetailaddressreceive() != null)
+                    ? customer.getPostreceive().getDetailaddressreceive() : "");
+
+            // Column ET (149): 비고
+            Cell cellET = row.getCell(149);
+            if (cellET == null) cellET = row.createCell(149);
+            cellET.setCellValue(customer.getAdditional() != null ? customer.getAdditional() : "");
+
+            // Column EU (150): 가입경로
+            Cell cellEU = row.getCell(150);
+            if (cellEU == null) cellEU = row.createCell(150);
+            cellEU.setCellValue(customer.getRegisterpath() != null ? customer.getRegisterpath() : "");
+
+            // Column EV (151): 총회참석 서면
+            Cell cellEV = row.getCell(151);
+            if (cellEV == null) cellEV = row.createCell(151);
+            cellEV.setCellValue((customer.getMeetingattend() != null
+                    && customer.getMeetingattend().getFtofattend() != null)
+                    ? customer.getMeetingattend().getFtofattend() : "");
+
+            // Column EW (152): 총회참석 직접
+            Cell cellEW = row.getCell(152);
+            if (cellEW == null) cellEW = row.createCell(152);
+            cellEW.setCellValue((customer.getMeetingattend() != null
+                    && customer.getMeetingattend().getSelfattend() != null)
+                    ? customer.getMeetingattend().getSelfattend() : "");
+
+            // Column EX (153): 총회참석 대리
+            Cell cellEX = row.getCell(153);
+            if (cellEX == null) cellEX = row.createCell(153);
+            cellEX.setCellValue((customer.getMeetingattend() != null
+                    && customer.getMeetingattend().getBehalfattend() != null)
+                    ? customer.getMeetingattend().getBehalfattend() : "");
+
+            // Column EY (154): 특이사항
+            Cell cellEY = row.getCell(154);
+            if (cellEY == null) cellEY = row.createCell(154);
+            cellEY.setCellValue(customer.getSpecialnote() != null ? customer.getSpecialnote() : "");
+
+            // Column EZ (155): 투표기기
+            Cell cellEZ = row.getCell(155);
+            if (cellEZ == null) cellEZ = row.createCell(155);
+            cellEZ.setCellValue(customer.getVotemachine() != null ? customer.getVotemachine() : "");
+
+            // Column FA (156): 안건 제1호
+            Cell cellFA = row.getCell(156);
+            if (cellFA == null) cellFA = row.createCell(156);
+            cellFA.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda1() != null)
+                    ? customer.getAgenda().getAgenda1() : "");
+
+            // Column FB (157): 안건 제2-1호
+            Cell cellFB = row.getCell(157);
+            if (cellFB == null) cellFB = row.createCell(157);
+            cellFB.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda2_1() != null)
+                    ? customer.getAgenda().getAgenda2_1() : "");
+
+            // Column FC (158): 안건 제2-2호
+            Cell cellFC = row.getCell(158);
+            if (cellFC == null) cellFC = row.createCell(158);
+            cellFC.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda2_2() != null)
+                    ? customer.getAgenda().getAgenda2_2() : "");
+
+            // Column FD (159): 안건 제2-3호
+            Cell cellFD = row.getCell(159);
+            if (cellFD == null) cellFD = row.createCell(159);
+            cellFD.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda2_3() != null)
+                    ? customer.getAgenda().getAgenda2_3() : "");
+
+            // Column FE (160): 안건 제2-4호
+            Cell cellFE = row.getCell(160);
+            if (cellFE == null) cellFE = row.createCell(160);
+            cellFE.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda2_4() != null)
+                    ? customer.getAgenda().getAgenda2_4() : "");
+
+            // Column FF (161): 안건 제3호
+            Cell cellFF = row.getCell(161);
+            if (cellFF == null) cellFF = row.createCell(161);
+            cellFF.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda3() != null)
+                    ? customer.getAgenda().getAgenda3() : "");
+
+            // Column FG (162): 안건 제4호
+            Cell cellFG = row.getCell(162);
+            if (cellFG == null) cellFG = row.createCell(162);
+            cellFG.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda4() != null)
+                    ? customer.getAgenda().getAgenda4() : "");
+
+            // Column FH (163): 안건 제5호
+            Cell cellFH = row.getCell(163);
+            if (cellFH == null) cellFH = row.createCell(163);
+            cellFH.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda5() != null)
+                    ? customer.getAgenda().getAgenda5() : "");
+
+            // Column FI (164): 안건 제6호
+            Cell cellFI = row.getCell(164);
+            if (cellFI == null) cellFI = row.createCell(164);
+            cellFI.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda6() != null)
+                    ? customer.getAgenda().getAgenda6() : "");
+
+            // Column FJ (165): 안건 제7호
+            Cell cellFJ = row.getCell(165);
+            if (cellFJ == null) cellFJ = row.createCell(165);
+            cellFJ.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda7() != null)
+                    ? customer.getAgenda().getAgenda7() : "");
+
+            // Column FK (166): 안건 제8호
+            Cell cellFK = row.getCell(166);
+            if (cellFK == null) cellFK = row.createCell(166);
+            cellFK.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda8() != null)
+                    ? customer.getAgenda().getAgenda8() : "");
+
+            // Column FL (167): 안건 제9호
+            Cell cellFL = row.getCell(167);
+            if (cellFL == null) cellFL = row.createCell(167);
+            cellFL.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda9() != null)
+                    ? customer.getAgenda().getAgenda9() : "");
+
+            // Column FM (168): 안건 제10호
+            Cell cellFM = row.getCell(168);
+            if (cellFM == null) cellFM = row.createCell(168);
+            cellFM.setCellValue((customer.getAgenda() != null && customer.getAgenda().getAgenda10() != null)
+                    ? customer.getAgenda().getAgenda10() : "");
+
+            // Column FN (169): 부속서류 사은품명
+            Cell cellFN = row.getCell(169);
+            if (cellFN == null) cellFN = row.createCell(169);
+            cellFN.setCellValue((customer.getAttachments() != null && customer.getAttachments().getPrizename() != null)
+                    ? customer.getAttachments().getPrizename() : "");
+
+            // Column FO (170): 부속서류 출자금 (flag "o")
+            Cell cellFO = row.getCell(170);
+            if (cellFO == null) cellFO = row.createCell(170);
+            cellFO.setCellValue((customer.getAttachments() != null
+                    && Boolean.TRUE.equals(customer.getAttachments().getInvestmentfile())) ? "o" : "");
+
+            workbook.setForceFormulaRecalculation(true);
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                workbook.write(fos);
+            }
+        }
+    }
+
     /**
      * 엑셀 파일의 첫번째 시트, 4번째 행(Row 인덱스 3)의 데이터를 읽어
      * 각 컬럼값을 System.out.println으로 출력하고,
@@ -49,7 +1301,6 @@ public class ExcelService {
      *
      * [매핑 스펙]
      * --- 첫 번째 섹션 (A ~ CS: 인덱스 0 ~ 96) ---
-     * (세부 매핑은 제공해주신 코드와 동일)
      *
      * --- 최종 섹션 (엑셀에서는 CT~CZ 7열 건너뛰고 DA부터 FO까지) ---
      * 1-based: DA=105 ~ FO=172; 0-based: DA=104 ~ FO=170
@@ -910,7 +2161,7 @@ public class ExcelService {
             customer.getAttachments().setInvestmentfile("o".equalsIgnoreCase(colFO_final));
 
             // --- 매핑 끝 ---
-            customerService.createCustomer(customer);
+            customerService.createCustomer(customer,false);
         }
     }
 

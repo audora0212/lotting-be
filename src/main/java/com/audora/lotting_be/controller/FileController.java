@@ -18,6 +18,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/files")
@@ -286,7 +287,7 @@ public class FileController {
         }
         // 4. 새로 추가한 fillRegFormat 메서드를 통해 고객 데이터를 템플릿 파일에 기록
         try {
-            excelService.fillRegFormat(tempFile, customer);
+            excelService.fillRegFormat(tempFile, Collections.singletonList(customer));
         } catch (IOException e) {
             tempFile.delete();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

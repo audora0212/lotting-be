@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.util.UriUtils;
 
 import java.io.*;
@@ -19,6 +20,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/files")
@@ -246,23 +248,25 @@ public class FileController {
                 .body(resource);
     }
 
-    @PostMapping("/uploadExcel")
-    public ResponseEntity<?> uploadExcelFile(@RequestParam("file") MultipartFile file) {
-        try {
-            // ExcelService의 새로운 메서드를 호출하여 파일 파싱 및 DB 저장
-            System.out.println("excelfile detected");
-            excelService.processRegExcelFile(file);
-            return ResponseEntity.ok(new MessageResponse("엑셀 파일이 성공적으로 처리되었습니다."));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new MessageResponse("엑셀 파일 처리 중 오류가 발생했습니다."));
-        }
+    @PostMapping(value = "/uploadExcelWithProgress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter uploadExcelWithProgress(@RequestParam("file") MultipartFile file) {
+        SseEmitter emitter = new SseEmitter(300000L);
+        CompletableFuture.runAsync(() -> {
+            try {
+                excelService.processExcelFileWithProgress(file, emitter);
+                emitter.send(SseEmitter.event().name("complete").data("Parsing complete"));
+                emitter.complete();
+            } catch (Exception e) {
+                try {
+                    emitter.send(SseEmitter.event().name("error").data(e.getMessage()));
+                } catch (Exception ex) {
+                    // 로그 처리 등
+                }
+                emitter.completeWithError(e);
+            }
+        });
+        return emitter;
     }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // 새로운 엔드포인트: /regfiledownload
-    // 템플릿 regformat.xlsx의 3번째 행(Row 인덱스 3)에 고객번호 201013인 고객 정보를 채워서 반환
-    // ─────────────────────────────────────────────────────────────────────────────
     @GetMapping("/regfiledownload")
     public ResponseEntity<Resource> downloadRegFile() {
         // 1. 고객번호 201013인 고객 조회

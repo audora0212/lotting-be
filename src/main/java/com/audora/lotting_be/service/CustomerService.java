@@ -12,6 +12,7 @@ import com.audora.lotting_be.payload.response.LateFeeInfo;
 import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.DepositHistoryRepository;
 import com.audora.lotting_be.repository.FeeRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ public class CustomerService {
     // ================================================
     // 1) 고객 생성 및 초기 Phase 설정
     // ================================================
+    @Transactional
     public Customer createCustomer(Customer customer, boolean recalc) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");

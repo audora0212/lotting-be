@@ -18,7 +18,6 @@ import com.audora.lotting_be.model.customer.minor.Postreceive;
 import com.audora.lotting_be.model.customer.minor.Responsible;
 import com.audora.lotting_be.model.customer.minor.Secondemp;
 import com.audora.lotting_be.model.customer.Phase;
-import com.audora.lotting_be.service.CustomerService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -63,7 +62,7 @@ public class ExcelService {
      *   그렇지 않으면 2100-01-01을 저장합니다.
      *   공란인 경우에는 planneddate는 그대로 null로 둡니다.
      */
-    public void processExcelFile(MultipartFile file) throws IOException {
+    public void processRegExcelFile(MultipartFile file) throws IOException {
         try (InputStream is = file.getInputStream();
              XSSFWorkbook workbook = new XSSFWorkbook(is)) {
 

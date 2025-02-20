@@ -4,7 +4,6 @@ import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.ExcelService;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,8 +18,6 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/files")
@@ -253,7 +250,7 @@ public class FileController {
         try {
             // ExcelService의 새로운 메서드를 호출하여 파일 파싱 및 DB 저장
             System.out.println("excelfile detected");
-            excelService.processExcelFile(file);
+            excelService.processRegExcelFile(file);
             return ResponseEntity.ok(new MessageResponse("엑셀 파일이 성공적으로 처리되었습니다."));
         } catch (Exception e) {
             e.printStackTrace();

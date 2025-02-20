@@ -267,6 +267,7 @@ public class FileController {
         });
         return emitter;
     }
+
     @GetMapping("/regfiledownload")
     public ResponseEntity<Resource> downloadRegFile() {
         // 1. 고객번호 201013인 고객 조회

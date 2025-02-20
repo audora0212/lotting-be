@@ -1327,10 +1327,32 @@ public class ExcelService {
             // 예제에서는 4번째 행(인덱스 3)부터 고객 데이터가 시작된다고 가정합니다.
             int startRow = 3;
             int lastRow = sheet.getLastRowNum();
-            int totalCustomers = lastRow - startRow + 1;
+            // 3) A열이 비어있는 행을 만나면 중단, 그 직전까지를 "유효한 마지막 행"으로 설정
+            int realLastRow = startRow;
+            for (int i = startRow; i <= lastRow; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    // row 자체가 비어 있으면 중단
+                    break;
+                }
+
+                // A열(0번 칼럼)
+                Cell cellA = row.getCell(0);
+                String valA = (cellA != null) ? formatter.formatCellValue(cellA).trim() : "";
+
+                if (valA.isEmpty()) {
+                    // A열이 공백이라면 여기서 데이터가 끝났다고 판단
+                    break;
+                }
+                // 그렇지 않으면 유효한 데이터 행이므로 업데이트
+                realLastRow = i;
+            }
+            // realLastRow가 최종 유효 행
+            // 따라서 totalCustomers = (realLastRow - startRow + 1)
+            int totalCustomers = realLastRow >= startRow ? (realLastRow - startRow + 1) : 0;
 
             // 각 행(고객)에 대해 처리
-            for (int i = startRow; i <= lastRow; i++) {
+            for (int i = startRow; i <= realLastRow; i++) {
                 org.apache.poi.ss.usermodel.Row row = sheet.getRow(i);
                 if (row == null) {
                     // 비어있는 행은 건너뜁니다.

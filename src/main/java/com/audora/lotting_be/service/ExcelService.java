@@ -127,7 +127,14 @@ public class ExcelService {
             String colH = formatter.formatCellValue(row.getCell(7), evaluator);
             System.out.println("Column H (가입차순): " + colH);
             customer.setBatch(colH);
-            // I는 건너뜁니다.
+
+            String colI = formatter.formatCellValue(row.getCell(8), evaluator);
+            System.out.println("Column I (신탁사제출): " + colI);
+            if (!colI.isEmpty()) {
+                customer.getFinancial().setTrustcompanydate(parseDate(colI, dtf));
+            }
+
+
             String colJ = formatter.formatCellValue(row.getCell(9), evaluator);
             System.out.println("Column J (가입일자): " + colJ);
             if (!colJ.isEmpty()) {

@@ -49,8 +49,7 @@ public class DepositHistoryService {
 
         try {
             // 재계산 유도 전 depositPhase1이 기록용(예상치 못한 값)인지 확인
-            logger.info("=============================================================", customer.getId());
-            if(!customer.getId().equals(1)){
+                        if(!customer.getId().equals(1)){
                 if (depositHistory.getDepositPhase1() == null || depositHistory.getDepositPhase1().equals("") ||
                         ("0".equals(depositHistory.getDepositPhase1()) ||
                                 "1".equals(depositHistory.getDepositPhase1()) ||

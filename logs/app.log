@@ -1677,3 +1677,497 @@ java.io.IOException: 현재 연결은 사용자의 호스트 시스템의 소프
 2025-02-22T00:28:48.883+09:00  INFO 14812 --- [lottingbe] [ForkJoinPool.commonPool-worker-1] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
 2025-02-22T00:28:48.943+09:00 ERROR 14812 --- [lottingbe] [ForkJoinPool.commonPool-worker-1] c.a.l.service.DepositExcelService        : 행 408 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
 2025-02-22T00:28:48.973+09:00  INFO 14812 --- [lottingbe] [ForkJoinPool.commonPool-worker-1] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:38:40.228+09:00  INFO 39128 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 39128 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:38:40.231+09:00  INFO 39128 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:38:40.276+09:00  INFO 39128 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:38:40.276+09:00  INFO 39128 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:38:40.976+09:00  INFO 39128 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:38:41.038+09:00  INFO 39128 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 56 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:38:41.760+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:38:41.778+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:38:41.778+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:38:41.827+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:38:41.827+09:00  INFO 39128 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1551 ms
+2025-02-22T01:38:41.855+09:00  INFO 39128 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:38:41.920+09:00  INFO 39128 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:38:42.664+09:00  INFO 39128 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2e98aae3
+2025-02-22T01:38:42.666+09:00  INFO 39128 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:38:42.752+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:38:42.815+09:00  INFO 39128 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:38:42.850+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:38:43.091+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:38:44.076+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:38:46.273+09:00  INFO 39128 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:38:46.531+09:00  INFO 39128 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:38:46.601+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:38:46.758+09:00  WARN 39128 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:38:47.147+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:38:47.167+09:00  INFO 39128 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:38:47.174+09:00  INFO 39128 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 7.353 seconds (process running for 7.71)
+2025-02-22T01:38:55.809+09:00  INFO 39128 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:38:55.809+09:00  INFO 39128 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:38:55.810+09:00  INFO 39128 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:39:03.638+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 총 3326건의 행을 처리합니다.
+2025-02-22T01:39:03.848+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: 201013
+2025-02-22T01:39:03.993+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : =============================================================
+2025-02-22T01:39:03.994+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory: 재계산 시작 for 고객 id: 201013
+2025-02-22T01:39:04.071+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 완료, 저장된 DepositHistory id: 1
+2025-02-22T01:39:04.283+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 1 처리 완료.
+2025-02-22T01:39:04.413+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: 201013
+2025-02-22T01:39:04.642+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : =============================================================
+2025-02-22T01:39:04.642+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory: 재계산 시작 for 고객 id: 201013
+2025-02-22T01:39:04.833+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 완료, 저장된 DepositHistory id: 2
+2025-02-22T01:39:05.007+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 2 처리 완료.
+2025-02-22T01:39:05.127+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: 201013
+2025-02-22T01:39:05.252+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : =============================================================
+2025-02-22T01:39:05.253+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory: 재계산 시작 for 고객 id: 201013
+2025-02-22T01:39:05.336+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 완료, 저장된 DepositHistory id: 3
+2025-02-22T01:39:05.507+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 3 처리 완료.
+2025-02-22T01:39:05.632+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: 201013
+2025-02-22T01:39:05.773+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : =============================================================
+2025-02-22T01:39:05.773+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory: 재계산 시작 for 고객 id: 201013
+2025-02-22T01:39:05.849+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 완료, 저장된 DepositHistory id: 4
+2025-02-22T01:39:06.032+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 4 처리 완료.
+2025-02-22T01:39:06.062+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.123+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 5 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.149+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.207+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 6 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.237+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.297+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 7 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.327+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.388+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 8 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.417+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.472+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 9 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.503+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.562+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 10 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.563+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 진행 상황: 10/3326
+2025-02-22T01:39:06.592+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.652+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 11 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.682+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.743+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 12 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.772+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.832+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 13 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.862+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:06.923+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 14 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:06.966+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.022+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 15 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.048+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.131+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 16 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.177+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.243+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 17 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.272+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.332+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 18 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.363+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.423+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 19 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.452+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.513+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 20 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.514+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 진행 상황: 20/3326
+2025-02-22T01:39:07.542+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.602+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 21 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.633+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.693+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 22 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.722+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.782+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 23 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.812+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.872+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 24 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.902+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:07.963+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 25 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:07.992+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:08.052+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 26 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:08.082+09:00  INFO 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositHistoryService      : createDepositHistory 시작. 고객 ID: null
+2025-02-22T01:39:08.143+09:00 ERROR 39128 --- [lottingbe] [ForkJoinPool.commonPool-worker-2] c.a.l.service.DepositExcelService        : 행 27 처리 중 예외 발생: 입금내역 생성 시 고객 ID 정보가 필요합니다.
+2025-02-22T01:39:12.579+09:00  INFO 43604 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 43604 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:39:12.581+09:00  INFO 43604 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:39:12.636+09:00  INFO 43604 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:39:12.636+09:00  INFO 43604 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:39:13.548+09:00  INFO 43604 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:39:13.611+09:00  INFO 43604 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 57 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:39:14.490+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:39:14.512+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:39:14.512+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:39:14.559+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:39:14.559+09:00  INFO 43604 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1922 ms
+2025-02-22T01:39:14.588+09:00  INFO 43604 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:39:14.648+09:00  INFO 43604 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:39:15.322+09:00  INFO 43604 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2e98aae3
+2025-02-22T01:39:15.324+09:00  INFO 43604 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:39:15.413+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:39:15.454+09:00  INFO 43604 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:39:15.482+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:39:15.729+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:39:16.617+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:39:17.588+09:00  INFO 43604 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:39:17.864+09:00  INFO 43604 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:39:17.948+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:39:18.063+09:00  WARN 43604 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:39:18.444+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:39:18.466+09:00  INFO 43604 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:39:18.471+09:00  INFO 43604 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 6.416 seconds (process running for 7.07)
+2025-02-22T01:39:21.285+09:00  INFO 43604 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:39:21.285+09:00  INFO 43604 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:39:21.286+09:00  INFO 43604 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:39:21.354+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-2] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:21Z, a difference of 5764734354 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:23.393+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-4] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:23Z, a difference of 5764736392 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:26.896+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-3] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:26Z, a difference of 5764739896 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:27.414+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-10] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:27Z, a difference of 5764740414 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:27.416+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-1] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:27Z, a difference of 5764740416 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:27.663+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-2] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:27Z, a difference of 5764740663 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:27.728+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-5] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:27Z, a difference of 5764740728 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:30.285+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-3] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:30Z, a difference of 5764743284 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:32.383+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-7] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:32Z, a difference of 5764745383 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:32.884+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-1] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:32Z, a difference of 5764745884 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:32.884+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-2] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:32Z, a difference of 5764745884 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:33.131+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-5] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:33Z, a difference of 5764746131 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:33.172+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-4] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:33Z, a difference of 5764746172 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:36.796+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-9] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:39:36Z, a difference of 5764749796 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:39:39.968+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-6] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] threw exception
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:441) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:39:39.972+09:00 ERROR 43604 --- [lottingbe] [http-nio-8080-exec-6] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session] with root cause
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:441) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:39:39.978+09:00  WARN 43604 --- [lottingbe] [http-nio-8080-exec-6] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream'
+2025-02-22T01:39:39.978+09:00  WARN 43604 --- [lottingbe] [http-nio-8080-exec-6] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream']
+2025-02-22T01:41:17.782+09:00  INFO 48292 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 48292 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:41:17.784+09:00  INFO 48292 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:41:17.820+09:00  INFO 48292 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:41:17.821+09:00  INFO 48292 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:41:18.389+09:00  INFO 48292 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:41:18.450+09:00  INFO 48292 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 55 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:41:19.072+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:41:19.084+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:41:19.084+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:41:19.124+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:41:19.125+09:00  INFO 48292 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1304 ms
+2025-02-22T01:41:19.148+09:00  INFO 48292 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:41:19.203+09:00  INFO 48292 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:41:19.968+09:00  INFO 48292 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4f4ef89
+2025-02-22T01:41:19.972+09:00  INFO 48292 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:41:20.049+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:41:20.091+09:00  INFO 48292 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:41:20.119+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:41:20.354+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:41:21.240+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:41:22.278+09:00  INFO 48292 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:41:22.558+09:00  INFO 48292 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:41:22.635+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:41:22.767+09:00  WARN 48292 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:41:23.137+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:41:23.159+09:00  INFO 48292 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:41:23.164+09:00  INFO 48292 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 5.746 seconds (process running for 6.074)
+2025-02-22T01:41:34.506+09:00  INFO 48292 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:41:34.507+09:00  INFO 48292 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:41:34.507+09:00  INFO 48292 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2025-02-22T01:41:35.722+09:00 ERROR 48292 --- [lottingbe] [http-nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] threw exception
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:443) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar:6.1.14]
+	at com.audora.lotting_be.service.DepositExcelService$$SpringCGLIB$$0.fillDepFormat(<generated>) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:41:35.726+09:00 ERROR 48292 --- [lottingbe] [http-nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session] with root cause
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:443) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar:6.1.14]
+	at com.audora.lotting_be.service.DepositExcelService$$SpringCGLIB$$0.fillDepFormat(<generated>) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:41:35.735+09:00  WARN 48292 --- [lottingbe] [http-nio-8080-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream'
+2025-02-22T01:41:35.735+09:00  WARN 48292 --- [lottingbe] [http-nio-8080-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream']
+2025-02-22T01:45:14.075+09:00  INFO 30764 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 30764 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:45:14.077+09:00  INFO 30764 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:45:14.115+09:00  INFO 30764 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:45:14.115+09:00  INFO 30764 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:45:14.682+09:00  INFO 30764 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:45:14.744+09:00  INFO 30764 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 56 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:45:15.357+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:45:15.371+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:45:15.371+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:45:15.410+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:45:15.410+09:00  INFO 30764 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1294 ms
+2025-02-22T01:45:15.436+09:00  INFO 30764 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:45:15.492+09:00  INFO 30764 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:45:16.261+09:00  INFO 30764 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4f4ef89
+2025-02-22T01:45:16.264+09:00  INFO 30764 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:45:16.343+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:45:16.386+09:00  INFO 30764 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:45:16.413+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:45:16.666+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:45:17.542+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:45:18.580+09:00  INFO 30764 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:45:18.856+09:00  INFO 30764 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:45:18.923+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:45:19.353+09:00  WARN 30764 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:45:19.691+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:45:19.713+09:00  INFO 30764 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:45:19.718+09:00  INFO 30764 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 6.008 seconds (process running for 6.329)
+2025-02-22T01:45:27.360+09:00  INFO 30764 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:45:27.360+09:00  INFO 30764 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:45:27.361+09:00  INFO 30764 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:45:44.140+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-1] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:45:44Z, a difference of 5765117139 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:45:44.278+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-3] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:45:44Z, a difference of 5765117278 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:45:44.333+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-2] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:45:44Z, a difference of 5765117333 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:45:44.381+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-4] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:45:44Z, a difference of 5765117381 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:08.176+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-8] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:08Z, a difference of 5765141176 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:08.271+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-9] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:08Z, a difference of 5765141270 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:08.315+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-1] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:08Z, a difference of 5765141315 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:08.361+09:00 ERROR 30764 --- [lottingbe] [http-nio-8080-exec-3] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:08Z, a difference of 5765141361 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:11.686+09:00  INFO 19184 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 19184 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:46:11.688+09:00  INFO 19184 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:46:11.724+09:00  INFO 19184 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:46:11.724+09:00  INFO 19184 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:46:12.296+09:00  INFO 19184 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:46:12.355+09:00  INFO 19184 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 53 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:46:12.951+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:46:12.963+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:46:12.963+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:46:13.003+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:46:13.003+09:00  INFO 19184 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1278 ms
+2025-02-22T01:46:13.029+09:00  INFO 19184 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:46:13.084+09:00  INFO 19184 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:46:13.793+09:00  INFO 19184 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@288de437
+2025-02-22T01:46:13.797+09:00  INFO 19184 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:46:13.871+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:46:13.910+09:00  INFO 19184 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:46:13.934+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:46:14.182+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:46:15.089+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:46:16.114+09:00  INFO 19184 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:46:16.410+09:00  INFO 19184 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:46:16.496+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:46:16.649+09:00  WARN 19184 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:46:17.025+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:46:17.048+09:00  INFO 19184 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:46:17.054+09:00  INFO 19184 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 5.74 seconds (process running for 6.061)
+2025-02-22T01:46:17.293+09:00  INFO 19184 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:46:17.293+09:00  INFO 19184 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:46:17.294+09:00  INFO 19184 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:46:17.358+09:00 ERROR 19184 --- [lottingbe] [http-nio-8080-exec-5] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:17Z, a difference of 5765150358 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:17.950+09:00 ERROR 19184 --- [lottingbe] [http-nio-8080-exec-6] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:17Z, a difference of 5765150950 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:18.328+09:00 ERROR 19184 --- [lottingbe] [http-nio-8080-exec-7] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:18Z, a difference of 5765151328 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:46:18.718+09:00 ERROR 19184 --- [lottingbe] [http-nio-8080-exec-9] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:46:18Z, a difference of 5765151717 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:49:24.182+09:00  INFO 24900 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 24900 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:49:24.191+09:00  INFO 24900 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:49:24.228+09:00  INFO 24900 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:49:24.228+09:00  INFO 24900 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:49:24.797+09:00  INFO 24900 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:49:24.860+09:00  INFO 24900 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 58 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:49:25.457+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:49:25.476+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:49:25.476+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:49:25.518+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:49:25.518+09:00  INFO 24900 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1290 ms
+2025-02-22T01:49:25.546+09:00  INFO 24900 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:49:25.603+09:00  INFO 24900 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:49:26.344+09:00  INFO 24900 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@67021e67
+2025-02-22T01:49:26.346+09:00  INFO 24900 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:49:26.423+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:49:26.471+09:00  INFO 24900 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:49:26.502+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:49:26.749+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:49:27.632+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:49:28.645+09:00  INFO 24900 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:49:28.923+09:00  INFO 24900 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:49:28.988+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:49:29.135+09:00  WARN 24900 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:49:29.554+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:49:29.578+09:00  INFO 24900 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:49:29.584+09:00  INFO 24900 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 5.768 seconds (process running for 6.097)
+2025-02-22T01:49:39.461+09:00  INFO 24900 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:49:39.461+09:00  INFO 24900 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:49:39.462+09:00  INFO 24900 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:49:41.130+09:00 ERROR 24900 --- [lottingbe] [http-nio-8080-exec-2] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:49:41Z, a difference of 5765354129 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:49:48.262+09:00 ERROR 24900 --- [lottingbe] [http-nio-8080-exec-8] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] threw exception
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:443) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar:6.1.14]
+	at com.audora.lotting_be.service.DepositExcelService$$SpringCGLIB$$0.fillDepFormat(<generated>) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:49:48.266+09:00 ERROR 24900 --- [lottingbe] [http-nio-8080-exec-8] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session] with root cause
+
+org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.audora.lotting_be.model.customer.DepositHistory.targetPhases: could not initialize proxy - no Session
+	at org.hibernate.collection.spi.AbstractPersistentCollection.throwLazyInitializationException(AbstractPersistentCollection.java:636) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.withTemporarySessionIfNeeded(AbstractPersistentCollection.java:219) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.AbstractPersistentCollection.readSize(AbstractPersistentCollection.java:150) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at org.hibernate.collection.spi.PersistentBag.isEmpty(PersistentBag.java:358) ~[hibernate-core-6.5.3.Final.jar:6.5.3.Final]
+	at com.audora.lotting_be.service.DepositExcelService.fillDepFormat(DepositExcelService.java:443) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar:6.1.14]
+	at com.audora.lotting_be.service.DepositExcelService$$SpringCGLIB$$0.fillDepFormat(<generated>) ~[main/:na]
+	at com.audora.lotting_be.controller.DepositExcelController.lambda$downloadDepositHistoryExcelProgress$1(DepositExcelController.java:98) ~[main/:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) ~[na:na]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:507) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1491) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:2073) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2035) ~[na:na]
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187) ~[na:na]
+
+2025-02-22T01:49:48.270+09:00  WARN 24900 --- [lottingbe] [http-nio-8080-exec-8] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream'
+2025-02-22T01:49:48.272+09:00  WARN 24900 --- [lottingbe] [http-nio-8080-exec-8] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.LinkedHashMap] with preset Content-Type 'text/event-stream']
+2025-02-22T01:53:59.829+09:00  INFO 43376 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 43376 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:53:59.831+09:00  INFO 43376 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:53:59.865+09:00  INFO 43376 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:53:59.865+09:00  INFO 43376 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:54:00.440+09:00  INFO 43376 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:54:00.502+09:00  INFO 43376 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 56 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:54:01.119+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:54:01.137+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:54:01.137+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:54:01.177+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:54:01.177+09:00  INFO 43376 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1312 ms
+2025-02-22T01:54:01.203+09:00  INFO 43376 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:54:01.258+09:00  INFO 43376 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:54:01.997+09:00  INFO 43376 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6f82695
+2025-02-22T01:54:02.000+09:00  INFO 43376 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:54:02.077+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:54:02.116+09:00  INFO 43376 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:54:02.141+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:54:02.368+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:54:03.251+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:54:04.277+09:00  INFO 43376 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:54:04.536+09:00  INFO 43376 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:54:04.615+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:54:04.753+09:00  WARN 43376 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:54:05.100+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:54:05.121+09:00  INFO 43376 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:54:05.127+09:00  INFO 43376 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 5.663 seconds (process running for 5.99)
+2025-02-22T01:54:10.854+09:00  INFO 43376 --- [lottingbe] [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:54:10.854+09:00  INFO 43376 --- [lottingbe] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:54:10.855+09:00  INFO 43376 --- [lottingbe] [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:54:12.463+09:00 ERROR 43376 --- [lottingbe] [http-nio-8080-exec-6] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:54:12Z, a difference of 5765625462 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-02-22T01:58:39.286+09:00  INFO 48592 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Starting LottingBeApplication using Java 22.0.1 with PID 48592 (C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be\build\classes\java\main started by gy255 in C:\Users\gy255\OneDrive\바탕 화면\lottingset\lotting-be)
+2025-02-22T01:58:39.288+09:00  INFO 48592 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : No active profile set, falling back to 1 default profile: "default"
+2025-02-22T01:58:39.321+09:00  INFO 48592 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-02-22T01:58:39.322+09:00  INFO 48592 --- [lottingbe] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-02-22T01:58:39.907+09:00  INFO 48592 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-22T01:58:39.966+09:00  INFO 48592 --- [lottingbe] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 53 ms. Found 5 JPA repository interfaces.
+2025-02-22T01:58:40.565+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-02-22T01:58:40.584+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-02-22T01:58:40.584+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.31]
+2025-02-22T01:58:40.624+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-02-22T01:58:40.624+09:00  INFO 48592 --- [lottingbe] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1302 ms
+2025-02-22T01:58:40.652+09:00  INFO 48592 --- [lottingbe] [restartedMain] c.audora.lotting_be.security.JwtUtils    : JWT Key initialized successfully.
+2025-02-22T01:58:40.703+09:00  INFO 48592 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-02-22T01:58:41.375+09:00  INFO 48592 --- [lottingbe] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@2184cae
+2025-02-22T01:58:41.377+09:00  INFO 48592 --- [lottingbe] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-02-22T01:58:41.458+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-22T01:58:41.498+09:00  INFO 48592 --- [lottingbe] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2025-02-22T01:58:41.523+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-22T01:58:41.760+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-22T01:58:42.633+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-22T01:58:43.645+09:00  INFO 48592 --- [lottingbe] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-22T01:58:43.917+09:00  INFO 48592 --- [lottingbe] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-02-22T01:58:43.995+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-02-22T01:58:44.120+09:00  WARN 48592 --- [lottingbe] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-22T01:58:44.523+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-02-22T01:58:44.547+09:00  INFO 48592 --- [lottingbe] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-02-22T01:58:44.553+09:00  INFO 48592 --- [lottingbe] [restartedMain] c.a.lotting_be.LottingBeApplication      : Started LottingBeApplication in 5.633 seconds (process running for 5.956)
+2025-02-22T01:58:51.138+09:00  INFO 48592 --- [lottingbe] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-02-22T01:58:51.138+09:00  INFO 48592 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-02-22T01:58:51.139+09:00  INFO 48592 --- [lottingbe] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-02-22T01:58:52.767+09:00 ERROR 48592 --- [lottingbe] [http-nio-8080-exec-4] c.audora.lotting_be.security.JwtUtils    : JWT validation error: JWT expired at 2024-12-16T23:20:27Z. Current time: 2025-02-21T16:58:52Z, a difference of 5765905766 milliseconds.  Allowed clock skew: 0 milliseconds.

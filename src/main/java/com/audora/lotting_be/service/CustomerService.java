@@ -736,4 +736,7 @@ public class CustomerService {
             return registerDate.plusYears(100);
         }
     }
+    public List<Customer> getAllCustomers() { // 모든 고객 반환
+        return customerRepository.findAll();
+    }
 }

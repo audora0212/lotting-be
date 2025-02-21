@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -271,8 +272,8 @@ public class FileController {
     @GetMapping("/regfiledownload")
     public ResponseEntity<Resource> downloadRegFile() {
         // 1. 고객번호 201013인 고객 조회
-        Customer customer = customerService.getCustomerById(201013);
-        if (customer == null) {
+        List<Customer> customers = customerService.getAllCustomers();
+        if (customers == null || customers.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         // 2. 템플릿 파일 regformat.xlsx를 classpath에서 로드
@@ -290,9 +291,9 @@ public class FileController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-        // 4. 새로 추가한 fillRegFormat 메서드를 통해 고객 데이터를 템플릿 파일에 기록
+        // 4. fillRegFormat 메서드를 통해 고객들의 데이터를 템플릿 파일에 기록
         try {
-            excelService.fillRegFormat(tempFile, Collections.singletonList(customer));
+            excelService.fillRegFormat(tempFile, customers);
         } catch (IOException e) {
             tempFile.delete();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

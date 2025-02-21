@@ -6,7 +6,7 @@ import lombok.Data;
 @Embeddable
 @Data
 public class MGM {
-    private Long mgmfee; //수수료
+    private String mgmfee; //수수료
     private String mgmcompanyname; //업체명
     private String mgmname; //이름
     private String mgminstitution; //기관

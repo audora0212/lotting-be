@@ -12,7 +12,11 @@ import com.audora.lotting_be.payload.response.LateFeeInfo;
 import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.DepositHistoryRepository;
 import com.audora.lotting_be.repository.FeeRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,6 +39,7 @@ public class CustomerService {
     // ================================================
     // 1) 고객 생성 및 초기 Phase 설정
     // ================================================
+    @Transactional
     public Customer createCustomer(Customer customer, boolean recalc) {
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
@@ -135,6 +140,7 @@ public class CustomerService {
                 // depositPhase1에 예상치 못한 값이 있으면 해당 입금은 계산에 포함하지 않음.
                 String dp1 = dh.getDepositPhase1();
                 if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
+
                     continue;
                 }
                 if ("o".equalsIgnoreCase(dh.getLoanStatus())) {
@@ -257,10 +263,12 @@ public class CustomerService {
                                                      Map<Integer, Long> cumulativeDeposits,
                                                      AtomicLong runningLoanPool) {
         String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
+        if (dp1 != null && !dp1.trim().isEmpty()&& !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
             // 예상치 못한 값이 있으므로 해당 기록은 phase 분배에서 배제
+            System.out.println("예상치못했다.");
             return;
         }
+        System.out.println("예상했다");
         long remaining = runningLoanPool.get();
         List<Phase> phases = customer.getPhases();
         if (phases != null) {
@@ -501,21 +509,16 @@ public class CustomerService {
     // 9) 통계: 정계약, 완납/미연체
     // ================================================
     public long countContractedCustomers() {
-        return customerRepository.countByCustomertype("c");
+        return customerRepository.count();
     }
 
-    public long countFullyPaidOrNotOverdueCustomers() {
+    public long countFullyPaidCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
-        LocalDate today = LocalDate.now();
         return allCustomers.stream().filter(customer -> {
-            List<Phase> phases = customer.getPhases();
-            if (phases == null || phases.isEmpty()) return true;
-            boolean hasOverdue = phases.stream().anyMatch(phase ->
-                    phase.getPlanneddate() != null &&
-                            phase.getPlanneddate().isBefore(today) &&
-                            phase.getFullpaiddate() == null
-            );
-            return !hasOverdue;
+            Status status = customer.getStatus();
+            return status != null
+                    && status.getAmmountsum() != null && status.getAmmountsum() != 0
+                    && status.getUnpaidammout() != null && status.getUnpaidammout() == 0;
         }).count();
     }
 
@@ -633,7 +636,8 @@ public class CustomerService {
                 return Collections.emptyList();
             }
         } else {
-            return customerRepository.findAll();
+            Pageable pageable = PageRequest.of(0, 30, Sort.by("id"));
+            return customerRepository.findAll(pageable).getContent();
         }
     }
 
@@ -734,4 +738,16 @@ public class CustomerService {
             return registerDate.plusYears(100);
         }
     }
+    @Transactional
+    public List<Customer> getAllCustomersWithPhases() {
+        List<Customer> customers = customerRepository.findAll();
+        for (Customer customer : customers) {
+            // phases 컬렉션 강제 초기화
+            if (customer.getPhases() != null) {
+                customer.getPhases().size();
+            }
+        }
+        return customers;
+    }
+
 }

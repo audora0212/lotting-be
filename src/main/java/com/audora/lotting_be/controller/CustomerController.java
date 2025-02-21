@@ -268,7 +268,6 @@ public class CustomerController {
             if (existingCustomer.getMeetingattend() == null) {
                 existingCustomer.setMeetingattend(new Meetingattend());
             }
-            existingCustomer.getMeetingattend().setHowtoattend(updatedCustomer.getMeetingattend().getHowtoattend());
             existingCustomer.getMeetingattend().setFtofattend(updatedCustomer.getMeetingattend().getFtofattend());
             existingCustomer.getMeetingattend().setSelfattend(updatedCustomer.getMeetingattend().getSelfattend());
             existingCustomer.getMeetingattend().setBehalfattend(updatedCustomer.getMeetingattend().getBehalfattend());
@@ -327,7 +326,7 @@ public class CustomerController {
 
     @GetMapping("/count/fullypaid")
     public ResponseEntity<Long> countFullyPaidCustomers() {
-        long count = customerService.countFullyPaidOrNotOverdueCustomers();
+        long count = customerService.countFullyPaidCustomers();
         return ResponseEntity.ok(count);
     }
 }

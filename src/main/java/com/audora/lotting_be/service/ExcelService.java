@@ -50,7 +50,7 @@ public class ExcelService {
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
 
             XSSFSheet sheet = workbook.getSheetAt(0);
-            int rowIndex = 2; // 3번째 행부터 시작
+            int rowIndex = 2;
 
             for (Customer customer : customers) {
                 // 고객 id가 1이면 건너뛰기

@@ -45,18 +45,22 @@ public class ExcelService {
     @Autowired
     private CustomerService customerService;
 
-    public void fillRegFormat(File tempFile, List<Customer> customers) throws IOException {
+    public void fillRegFormat(File tempFile, List<Customer> customers, SseEmitter emitter) throws IOException {
         try (FileInputStream fis = new FileInputStream(tempFile);
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
 
             XSSFSheet sheet = workbook.getSheetAt(0);
             int rowIndex = 2;
+            int total = customers.size();
 
-            for (Customer customer : customers) {
+            for (int i = 0; i < total; i++) {
+                Customer customer = customers.get(i);
+
                 // 고객 id가 1이면 건너뛰기
                 if (customer.getId() == 1) {
                     continue;
                 }
+                System.out.println(customer.getId());
 
                 // 해당 행 가져오기(없으면 생성)
                 Row row = sheet.getRow(rowIndex);
@@ -1304,6 +1308,13 @@ public class ExcelService {
                 //엑셀에 고객정보 기입끝 : code spread complete
 
                 rowIndex++;
+
+                // 진행 상황 업데이트 (예: "현재 처리된 고객번호 / 전체 고객 수")
+                try {
+                    emitter.send(SseEmitter.event().name("progress").data((i + 1) + "/" + total));
+                } catch (Exception ex) {
+                    // 진행 상황 전송 실패시 무시
+                }
             }
 
             workbook.setForceFormulaRecalculation(true);

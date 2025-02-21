@@ -736,7 +736,16 @@ public class CustomerService {
             return registerDate.plusYears(100);
         }
     }
-    public List<Customer> getAllCustomers() { // 모든 고객 반환
-        return customerRepository.findAll();
+    @Transactional
+    public List<Customer> getAllCustomersWithPhases() {
+        List<Customer> customers = customerRepository.findAll();
+        for (Customer customer : customers) {
+            // phases 컬렉션 강제 초기화
+            if (customer.getPhases() != null) {
+                customer.getPhases().size();
+            }
+        }
+        return customers;
     }
+
 }

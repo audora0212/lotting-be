@@ -4,11 +4,13 @@ import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.ExcelService;
+import com.audora.lotting_be.util.FileCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,8 +21,10 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -269,52 +273,81 @@ public class FileController {
         return emitter;
     }
 
-    @GetMapping("/regfiledownload")
-    public ResponseEntity<Resource> downloadRegFile() {
-        List<Customer> customers = customerService.getAllCustomers();
-        if (customers == null || customers.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        // 2. 템플릿 파일 regformat.xlsx를 classpath에서 로드
-        ClassPathResource templateResource = new ClassPathResource("excel_templates/regformat.xlsx");
-        if (!templateResource.exists()) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-        // 3. 템플릿 파일을 임시 파일로 복사
-        File tempFile;
-        try {
-            tempFile = Files.createTempFile("regformat-", ".xlsx").toFile();
-            try (InputStream is = templateResource.getInputStream()) {
-                Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-        // 4. fillRegFormat 메서드를 통해 고객들의 데이터를 템플릿 파일에 기록
-        try {
-            excelService.fillRegFormat(tempFile, customers);
-        } catch (IOException e) {
-            tempFile.delete();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-        // 5. 임시 파일의 내용을 메모리로 읽어 Resource로 변환
-        ByteArrayResource resource;
-        try {
-            byte[] fileBytes = Files.readAllBytes(tempFile.toPath());
-            resource = new ByteArrayResource(fileBytes);
-        } catch (IOException e) {
-            tempFile.delete();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-        // 6. 임시 파일 삭제 후 다운로드 응답 생성
-        tempFile.delete();
-        String downloadFilename = "regformat_download.xlsx";
-        String encodedFilename = UriUtils.encode(downloadFilename, StandardCharsets.UTF_8);
-        MediaType mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    // (a) SSE 엔드포인트 : 파일 생성 및 진행 상황 전달
+    @GetMapping(value = "/regfiledownload/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateRegFile() {
+        SseEmitter emitter = new SseEmitter(300000L);
+        CompletableFuture.runAsync(() -> {
+            File tempFile = null;
+            try {
+                // 고객 목록 조회 (phases 등 미리 초기화한 메서드 사용)
+                List<Customer> customers = customerService.getAllCustomersWithPhases();
+                if (customers == null || customers.isEmpty()) {
+                    emitter.send(SseEmitter.event().name("error").data("No customers found."));
+                    emitter.complete();
+                    return;
+                }
 
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
-                .body(resource);
+                // 템플릿 파일 로드
+                ClassPathResource templateResource = new ClassPathResource("excel_templates/regformat.xlsx");
+                if (!templateResource.exists()) {
+                    emitter.send(SseEmitter.event().name("error").data("Template file not found."));
+                    emitter.complete();
+                    return;
+                }
+
+                // 템플릿 파일을 임시 파일로 복사
+                tempFile = Files.createTempFile("regformat-", ".xlsx").toFile();
+                try (InputStream is = templateResource.getInputStream()) {
+                    Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                // 엑셀 템플릿에 고객 데이터 기록 (진행 상황 전달)
+                excelService.fillRegFormat(tempFile, customers, emitter);
+
+                // 파일 생성 완료 후 고유 식별자 생성 및 캐시에 저장
+                String fileId = UUID.randomUUID().toString();
+                FileCache.put(fileId, tempFile);
+
+                emitter.send(SseEmitter.event().name("complete").data(fileId));
+                emitter.complete();
+            } catch (Exception e) {
+                try {
+                    emitter.send(SseEmitter.event().name("error").data(e.getMessage()));
+                } catch (Exception ex) {
+                    // 무시
+                }
+                emitter.completeWithError(e);
+                if (tempFile != null && tempFile.exists()) {
+                    tempFile.delete();
+                }
+            }
+        });
+        return emitter;
     }
+
+    // (b) 파일 다운로드 엔드포인트 : fileId를 이용하여 실제 파일 전달
+    @GetMapping("/regfiledownload/file")
+    public ResponseEntity<Resource> downloadGeneratedRegFile(@RequestParam("fileId") String fileId) {
+        try {
+            File tempFile = FileCache.get(fileId);
+            if (tempFile == null || !tempFile.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            Resource resource = new UrlResource(tempFile.toURI());
+            String encodedFilename = UriUtils.encode("regformat_download.xlsx", StandardCharsets.UTF_8);
+            MediaType mediaType = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            // 파일 다운로드 후 캐시에서 제거 (원하는 경우)
+            FileCache.remove(fileId);
+
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFilename)
+                    .body(resource);
+        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
 }

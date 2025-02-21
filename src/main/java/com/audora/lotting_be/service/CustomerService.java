@@ -509,21 +509,16 @@ public class CustomerService {
     // 9) 통계: 정계약, 완납/미연체
     // ================================================
     public long countContractedCustomers() {
-        return customerRepository.countByCustomertype("c");
+        return customerRepository.count();
     }
 
-    public long countFullyPaidOrNotOverdueCustomers() {
+    public long countFullyPaidCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
-        LocalDate today = LocalDate.now();
         return allCustomers.stream().filter(customer -> {
-            List<Phase> phases = customer.getPhases();
-            if (phases == null || phases.isEmpty()) return true;
-            boolean hasOverdue = phases.stream().anyMatch(phase ->
-                    phase.getPlanneddate() != null &&
-                            phase.getPlanneddate().isBefore(today) &&
-                            phase.getFullpaiddate() == null
-            );
-            return !hasOverdue;
+            Status status = customer.getStatus();
+            return status != null
+                    && status.getAmmountsum() != null && status.getAmmountsum() != 0
+                    && status.getUnpaidammout() != null && status.getUnpaidammout() == 0;
         }).count();
     }
 

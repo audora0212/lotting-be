@@ -326,7 +326,7 @@ public class CustomerController {
 
     @GetMapping("/count/fullypaid")
     public ResponseEntity<Long> countFullyPaidCustomers() {
-        long count = customerService.countFullyPaidOrNotOverdueCustomers();
+        long count = customerService.countFullyPaidCustomers();
         return ResponseEntity.ok(count);
     }
 }

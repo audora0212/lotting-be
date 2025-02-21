@@ -271,7 +271,6 @@ public class FileController {
 
     @GetMapping("/regfiledownload")
     public ResponseEntity<Resource> downloadRegFile() {
-        // 1. 고객번호 201013인 고객 조회
         List<Customer> customers = customerService.getAllCustomers();
         if (customers == null || customers.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     @Query(value = "SELECT COALESCE(MAX(id), 0) + 1 FROM customer", nativeQuery = true)
@@ -15,6 +16,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     List<Customer> findByCustomerDataNameContaining(String name);
 
     List<Customer> findByCustomerDataNameAndId(String name, Integer id);
+
+    Optional<Customer> findByCustomerDataName(String name);
 
     // 정계약한(customertype = 'c') 고객의 수를 세는 쿼리
     long countByCustomertype(String customertype);

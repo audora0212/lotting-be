@@ -137,6 +137,7 @@ public class CustomerService {
                 // depositPhase1에 예상치 못한 값이 있으면 해당 입금은 계산에 포함하지 않음.
                 String dp1 = dh.getDepositPhase1();
                 if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
+
                     continue;
                 }
                 if ("o".equalsIgnoreCase(dh.getLoanStatus())) {
@@ -259,10 +260,12 @@ public class CustomerService {
                                                      Map<Integer, Long> cumulativeDeposits,
                                                      AtomicLong runningLoanPool) {
         String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
+        if (dp1 != null && !dp1.trim().isEmpty()&& !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
             // 예상치 못한 값이 있으므로 해당 기록은 phase 분배에서 배제
+            System.out.println("예상치못했다.");
             return;
         }
+        System.out.println("예상했다");
         long remaining = runningLoanPool.get();
         List<Phase> phases = customer.getPhases();
         if (phases != null) {

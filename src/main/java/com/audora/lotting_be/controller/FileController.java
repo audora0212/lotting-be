@@ -255,7 +255,7 @@ public class FileController {
 
     @PostMapping(value = "/uploadExcelWithProgress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter uploadExcelWithProgress(@RequestParam("file") MultipartFile file) {
-        SseEmitter emitter = new SseEmitter(300000L);
+        SseEmitter emitter = new SseEmitter(3000000L);
         CompletableFuture.runAsync(() -> {
             try {
                 excelService.processExcelFileWithProgress(file, emitter);
@@ -276,7 +276,7 @@ public class FileController {
     // (a) SSE 엔드포인트 : 파일 생성 및 진행 상황 전달
     @GetMapping(value = "/regfiledownload/progress", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateRegFile() {
-        SseEmitter emitter = new SseEmitter(300000L);
+        SseEmitter emitter = new SseEmitter(3000000L);
         CompletableFuture.runAsync(() -> {
             File tempFile = null;
             try {

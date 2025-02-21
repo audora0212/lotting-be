@@ -14,6 +14,9 @@ import com.audora.lotting_be.repository.DepositHistoryRepository;
 import com.audora.lotting_be.repository.FeeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -638,7 +641,8 @@ public class CustomerService {
                 return Collections.emptyList();
             }
         } else {
-            return customerRepository.findAll();
+            Pageable pageable = PageRequest.of(0, 30, Sort.by("id"));
+            return customerRepository.findAll(pageable).getContent();
         }
     }
 

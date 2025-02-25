@@ -621,25 +621,31 @@ public class CustomerService {
     // 11) 검색
     // ================================================
     public List<Customer> searchCustomers(String name, String number) {
+        List<Customer> customers;
         if (name != null && number != null) {
             if (number.matches("\\d+")) {
-                return customerRepository.findByNameContainingAndIdContaining(name, number);
+                customers = customerRepository.findByNameContainingAndIdContaining(name, number);
             } else {
-                return customerRepository.findByCustomerDataNameContaining(name);
+                customers = customerRepository.findByCustomerDataNameContaining(name);
             }
         } else if (name != null) {
-            return customerRepository.findByCustomerDataNameContaining(name);
+            customers = customerRepository.findByCustomerDataNameContaining(name);
         } else if (number != null) {
             if (number.matches("\\d+")) {
-                return customerRepository.findByIdContaining(number);
+                customers = customerRepository.findByIdContaining(number);
             } else {
-                return Collections.emptyList();
+                customers = Collections.emptyList();
             }
         } else {
             Pageable pageable = PageRequest.of(0, 30, Sort.by("id"));
-            return customerRepository.findAll(pageable).getContent();
+            customers = customerRepository.findAll(pageable).getContent();
         }
+        // id가 1인 더미 데이터는 필터링
+        return customers.stream()
+                .filter(customer -> !customer.getId().equals(1))
+                .collect(Collectors.toList());
     }
+
 
     // ================================================
     // 12) DepositList DTO

@@ -18,10 +18,8 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DepositExcelService {
@@ -115,13 +113,23 @@ public class DepositExcelService {
                     // D: 기재내용 (인덱스 3)
                     dh.setDetails(formatter.formatCellValue(row.getCell(3)));
 
-                    // E: 계약자 (인덱스 4) → 고객 식별자로 활용
+// E: 계약자 (인덱스 4) → 고객 식별자로 활용
                     String contractor = formatter.formatCellValue(row.getCell(4)).trim();
                     dh.setContractor(contractor);
                     if (!contractor.isEmpty()) {
-                        Optional<Customer> customerOpt = customerRepository.findByCustomerDataName(contractor);
-                        if (customerOpt.isPresent()) {
-                            dh.setCustomer(customerOpt.get());
+                        // 기존의 Optional<Customer> 대신, 해당 이름과 일치하는 고객들을 리스트로 조회
+                        List<Customer> matchingCustomers = customerRepository.findByCustomerDataNameContaining(contractor)
+                                .stream()
+                                // 이름이 정확히 일치하는 고객만 필터링 (공백 제거 등 필요한 전처리 후 비교)
+                                .filter(c -> contractor.equals(c.getCustomerData().getName()))
+                                .collect(Collectors.toList());
+
+                        if (!matchingCustomers.isEmpty()) {
+                            // 여러 고객이 검색될 경우, 고객번호(id)가 가장 높은 고객 선택
+                            Customer selectedCustomer = matchingCustomers.stream()
+                                    .max(Comparator.comparing(Customer::getId))
+                                    .get();
+                            dh.setCustomer(selectedCustomer);
                         } else {
                             // 고객 이름과 일치하는 결과가 없으면 기본 고객(id:1)에 할당
                             Optional<Customer> defaultCustomerOpt = customerRepository.findById(1);
@@ -132,6 +140,7 @@ public class DepositExcelService {
                             }
                         }
                     }
+
 
                     // F: 찾으신금액 (인덱스 5)
                     String withdrawnStr = formatter.formatCellValue(row.getCell(5));

@@ -2018,6 +2018,38 @@ public class ExcelService {
         phase10.setCustomer(customer);
         customer.getPhases().add(phase10);
 
+
+        // -------------------------------------------------------------
+        // (추가) 인덱스 98, 99번 열의 합을 Loan.loanammount 로 저장
+        // -------------------------------------------------------------
+        String col98Str = formatter.formatCellValue(row.getCell(98), evaluator).trim();
+        String col99Str = formatter.formatCellValue(row.getCell(99), evaluator).trim();
+
+        long col98Val = parseLongOrZero(col98Str);
+        long col99Val = parseLongOrZero(col99Str);
+
+        long loanAmmountSum = col98Val + col99Val;
+        customer.getLoan().setLoanammount(loanAmmountSum);
+
+        // -------------------------------------------------------------
+        // (추가) 인덱스 101번 열을 Loan.selfammount 로 저장
+        // -------------------------------------------------------------
+        String col101Str = formatter.formatCellValue(row.getCell(101), evaluator).trim();
+        long selfAmmount = parseLongOrZero(col101Str);
+        customer.getLoan().setSelfammount(selfAmmount);
+
+        // -------------------------------------------------------------
+        // (추가) 인덱스 102번 열을 Loan.loanselfsum, Loan.loanselfcurrent,
+        //        Status.loanExceedAmount 에 모두 저장
+        // -------------------------------------------------------------
+        String col102Str = formatter.formatCellValue(row.getCell(102), evaluator).trim();
+        long col102Val = parseLongOrZero(col102Str);
+
+        customer.getLoan().setLoanselfsum(col102Val);
+        customer.getLoan().setLoanselfcurrent(col102Val);
+        customer.getStatus().setLoanExceedAmount(col102Val);
+
+
         // --- 최종 섹션: DA ~ FO (0-based 인덱스 104 ~ 170) ---
         String colDA_final = formatter.formatCellValue(row.getCell(104), evaluator);
         System.out.println("Column DA (총 면제금액): " + colDA_final);
@@ -2511,5 +2543,18 @@ public class ExcelService {
             cell = row.createCell(colIndex);
         }
         return cell;
+    }
+
+    private long parseLongOrZero(String numericStr) {
+        if (numericStr == null || numericStr.isEmpty()) {
+            return 0L;
+        }
+        try {
+            // 숫자 이외 문자 제거
+            String cleaned = numericStr.replaceAll("[^0-9\\-]", "");
+            return Long.parseLong(cleaned);
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 }

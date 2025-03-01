@@ -84,7 +84,7 @@ public class CustomerService {
         }
         // 고객 저장 후 전체 재계산
         customer = customerRepository.save(customer);
-            recalculateEverything(customer);
+        recalculateEverything(customer);
         return customer;
     }
 
@@ -264,11 +264,8 @@ public class CustomerService {
                                                      AtomicLong runningLoanPool) {
         String dp1 = dh.getDepositPhase1();
         if (dp1 != null && !dp1.trim().isEmpty()&& !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
-            // 예상치 못한 값이 있으므로 해당 기록은 phase 분배에서 배제
-            System.out.println("예상치못했다.");
             return;
         }
-        System.out.println("예상했다");
         long remaining = runningLoanPool.get();
         List<Phase> phases = customer.getPhases();
         if (phases != null) {

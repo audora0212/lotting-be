@@ -13,6 +13,8 @@ import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.DepositHistoryRepository;
 import com.audora.lotting_be.repository.FeeRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,7 @@ import java.util.Comparator;
 
 @Service
 public class CustomerService {
+    private static final Logger logger = LoggerFactory.getLogger(CustomerService.class);
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -41,6 +44,7 @@ public class CustomerService {
     // ================================================
     @Transactional
     public Customer createCustomer(Customer customer, boolean recalc) {
+
         if (customerRepository.existsById(customer.getId())) {
             throw new IllegalArgumentException("이미 존재하는 관리번호입니다.");
         }
@@ -104,8 +108,11 @@ public class CustomerService {
      * (5) Loan 필드를 업데이트하여, 대출과 자납 금액을 별도로 누적
      * (6) 최종 저장
      */
+// 기존 recalculateEverything 메서드의 수정 버전 (대출/자납 입금기록은 수동 Loan 값을 소진하는 로직)
+// CustomerService.java
+
     public void recalculateEverything(Customer customer) {
-        // 1) 각 Phase 초기화
+        // 1) 각 Phase 초기화 (일반 입금용)
         if (customer.getPhases() != null) {
             for (Phase phase : customer.getPhases()) {
                 phase.setCharged(0L);
@@ -119,74 +126,76 @@ public class CustomerService {
                 phase.setSum(feesum - discountVal);
             }
         }
-        // 2) 각 Phase별 누적 입금액 맵 초기화
+
+        // 2) 일반 입금용 Phase별 누적 입금액 초기화
         Map<Integer, Long> cumulativeDeposits = new HashMap<>();
         if (customer.getPhases() != null) {
             for (Phase p : customer.getPhases()) {
                 cumulativeDeposits.put(p.getPhaseNumber(), 0L);
             }
         }
-        // 3) DepositHistory 처리
-        List<DepositHistory> histories = customer.getDepositHistories();
+
         long leftoverGeneral = 0L;
-        AtomicLong runningLoanPool = new AtomicLong(0L);
-        // 새로운 플래그: 대출, 자납 각각 첫 거래 여부
-        boolean firstLoanProcessed = false;
-        boolean firstSelfProcessed = false;
+        long loanConsumedSum = 0L; // 대출/자납 입금 기록에서 실제 배분된 금액 누적 변수
+        int countLoanRecords = 0;  // 지금까지 처리한 대출 입금 기록 수
+        int countSelfRecords = 0;  // 지금까지 처리한 자납 입금 기록 수
+
+        List<DepositHistory> histories = customer.getDepositHistories();
         if (histories != null && !histories.isEmpty()) {
             // 거래일시 순으로 정렬
             histories.sort(Comparator.comparing(DepositHistory::getTransactionDateTime));
             for (DepositHistory dh : histories) {
-                // depositPhase1에 예상치 못한 값이 있으면 해당 입금은 계산에 포함하지 않음.
-                String dp1 = dh.getDepositPhase1();
-                if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
-
-                    continue;
-                }
-                if ("o".equalsIgnoreCase(dh.getLoanStatus())) {
-                    // 대출/자납 입금 처리
-                    boolean hasLoan = false;
-                    boolean hasSelf = false;
-                    if (dh.getLoanDetails() != null) {
-                        if (dh.getLoanDetails().getLoanammount() != null && dh.getLoanDetails().getLoanammount() > 0) {
-                            hasLoan = true;
-                        }
-                        if (dh.getLoanDetails().getSelfammount() != null && dh.getLoanDetails().getSelfammount() > 0) {
-                            hasSelf = true;
-                        }
+                if (!"o".equalsIgnoreCase(dh.getLoanStatus())) {
+                    // 일반 입금 기록: 기존 분배 로직 사용
+                    long leftover = distributeDepositPaymentToPhases(customer, dh, cumulativeDeposits);
+                    leftoverGeneral += leftover;
+                    depositHistoryRepository.save(dh);
+                } else {
+                    // 대출/자납 입금 기록:
+                    long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
+                    // 대상 Phase에 배분 (targetPhases가 지정된 경우)
+                    AtomicLong localLoanPool = new AtomicLong(depositAmt);
+                    List<Integer> targetList = dh.getTargetPhases();
+                    if (targetList != null && !targetList.isEmpty()) {
+                        distributeLoanDepositPaymentToPhases(customer, dh, cumulativeDeposits, localLoanPool);
                     }
-                    if (hasLoan) {
-                        if (!firstLoanProcessed) {
+                    // loan_details 값 확인
+                    boolean hasLoanValue = (dh.getLoanDetails() != null &&
+                            dh.getLoanDetails().getLoanammount() != null &&
+                            dh.getLoanDetails().getLoanammount() > 0);
+                    boolean hasSelfValue = (dh.getLoanDetails() != null &&
+                            dh.getLoanDetails().getSelfammount() != null &&
+                            dh.getLoanDetails().getSelfammount() > 0);
+
+                    // 조건에 따라 loan_record와 self_record 설정
+                    if (hasLoanValue) {
+                        if (countLoanRecords == 0) {
                             dh.setLoanRecord("1");
-                            firstLoanProcessed = true;
                         } else {
                             dh.setLoanRecord("0");
                         }
+                        countLoanRecords++;
                     } else {
                         dh.setLoanRecord(null);
                     }
-                    if (hasSelf) {
-                        if (!firstSelfProcessed) {
+                    if (hasSelfValue) {
+                        if (countSelfRecords == 0) {
                             dh.setSelfRecord("1");
-                            firstSelfProcessed = true;
                         } else {
                             dh.setSelfRecord("0");
                         }
+                        countSelfRecords++;
                     } else {
                         dh.setSelfRecord(null);
                     }
-                    long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
-                    runningLoanPool.addAndGet(depositAmt);
-                    distributeLoanDepositPaymentToPhases(customer, dh, cumulativeDeposits, runningLoanPool);
-                } else {
-                    // 일반 입금 처리
-                    long leftover = distributeDepositPaymentToPhases(customer, dh, cumulativeDeposits);
-                    leftoverGeneral += leftover;
+                    depositHistoryRepository.save(dh);
+                    // 실제 사용된 금액 = 입금액 - 배분 후 남은 금액
+                    long usedAmount = depositAmt - localLoanPool.get();
+                    loanConsumedSum += usedAmount;
                 }
-                depositHistoryRepository.save(dh);
             }
         }
-        long leftoverLoan = runningLoanPool.get();
+
         // 4) Status 업데이트
         Status st = customer.getStatus();
         if (st == null) {
@@ -195,75 +204,28 @@ public class CustomerService {
             customer.setStatus(st);
         }
         st.setExceedamount(leftoverGeneral);
-        st.setLoanExceedAmount(leftoverLoan);
-        // 5) Status 및 Loan 필드 업데이트
+        // 대출/자납 잔액: 수동 입력된 Loan 값(대출액 + 자납액)에서 대출/자납 입금 중 실제 배분된 금액을 차감
+        long manualLoanTotal = 0L;
+        if (customer.getLoan() != null) {
+            manualLoanTotal = (customer.getLoan().getLoanammount() != null ? customer.getLoan().getLoanammount() : 0L)
+                    + (customer.getLoan().getSelfammount() != null ? customer.getLoan().getSelfammount() : 0L);
+        }
+        st.setLoanExceedAmount(Math.max(0, manualLoanTotal - loanConsumedSum));
         updateStatusFields(customer);
         updateLoanField(customer);
         customerRepository.save(customer);
     }
 
-    // ================================================
-    // 3-1) 일반 입금 분배 로직
-    // ================================================
-    /**
-     * DepositHistory(일반 입금)의 입금액을 Phase별로 배분하고 남은 금액(leftover)을 반환합니다.
-     * 단, 해당 DepositHistory의 depositPhase1에 예상치 못한 값이 있으면,
-     * 배분을 전혀 수행하지 않고 depositAmount 전체를 남김으로 처리합니다.
-     */
-    public long distributeDepositPaymentToPhases(Customer customer,
-                                                 DepositHistory dh,
-                                                 Map<Integer, Long> cumulativeDeposits) {
-        // depositPhase1에 예상치 못한 값이 있으면 배분하지 않음.
-        String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
-            return (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
-        }
-        long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
-        long remaining = depositAmt;
-        List<Phase> phases = customer.getPhases();
-        if (phases != null) {
-            phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
-        }
-        for (Phase phase : phases) {
-            int phaseNo = phase.getPhaseNumber();
-            long already = cumulativeDeposits.getOrDefault(phaseNo, 0L);
-            long feesum = (phase.getFeesum() != null) ? phase.getFeesum() : 0L;
-            long discount = (phase.getDiscount() != null) ? phase.getDiscount() : 0L;
-            long required = (feesum - discount) - already;
-            if (required <= 0) continue;
-            long allocation = Math.min(remaining, required);
-            if (allocation > 0) {
-                boolean wasZero = (already == 0L);
-                already += allocation;
-                remaining -= allocation;
-                phase.setCharged(already);
-                if (already >= (feesum - discount)) {
-                    phase.setFullpaiddate(dh.getTransactionDateTime() != null ? dh.getTransactionDateTime().toLocalDate() : null);
-                }
-                phase.setSum((feesum - discount) - already);
-                // depositPhase 필드 업데이트: 만약 이미 예상치 못한 값이 없다면 computedValue("1" 또는 "0")로 설정
-                setDepositPhaseField(dh, phaseNo, wasZero ? "1" : "0");
-                cumulativeDeposits.put(phaseNo, already);
-            }
-            if (remaining <= 0) break;
-        }
-        return remaining;
-    }
 
-    // ================================================
-    // 3-2) 대출/자납 입금 분배 로직
-    // ================================================
-    /**
-     * 대출/자납 입금(loanStatus = 'o')의 경우,
-     * 누적 대출금 풀(runningLoanPool)의 금액을, DepositHistory의 targetPhases에 따라 배분합니다.
-     * 단, depositPhase1에 예상치 못한 값이 있으면 배분 계산을 전혀 수행하지 않습니다.
-     */
+
+
+    // 기존 distributeLoanDepositPaymentToPhases 메서드 (변경 없이 사용)
     public void distributeLoanDepositPaymentToPhases(Customer customer,
                                                      DepositHistory dh,
                                                      Map<Integer, Long> cumulativeDeposits,
                                                      AtomicLong runningLoanPool) {
         String dp1 = dh.getDepositPhase1();
-        if (dp1 != null && !dp1.trim().isEmpty()&& !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
+        if (dp1 != null && !dp1.trim().isEmpty() && !( "0".equals(dp1) || "1".equals(dp1) || "2".equals(dp1) )) {
             return;
         }
         long remaining = runningLoanPool.get();
@@ -278,7 +240,7 @@ public class CustomerService {
                 if (phase == null) continue;
                 long already = cumulativeDeposits.getOrDefault(phaseNo, 0L);
                 long feesum = (phase.getFeesum() != null) ? phase.getFeesum() : 0L;
-                long required = feesum - already; // 할인 무시
+                long required = feesum - already;
                 if (required <= 0) continue;
                 long allocation = Math.min(remaining, required);
                 if (allocation > 0) {
@@ -298,6 +260,82 @@ public class CustomerService {
         }
         runningLoanPool.set(remaining);
     }
+
+    // updateLoanField 메서드는 중복 없이 하나만 존재하도록 함.
+    public void updateLoanField(Customer customer) {
+        if (customer.getLoan() == null) {
+            customer.setLoan(new Loan());
+        }
+        // 수동 입력 Loan 값은 재계산 없이 그대로 유지합니다.
+        customerRepository.save(customer);
+    }
+
+
+    // ================================================
+    // 3-1) 일반 입금 분배 로직
+    // ================================================
+    /**
+     * DepositHistory(일반 입금)의 입금액을 Phase별로 배분하고 남은 금액(leftover)을 반환합니다.
+     * 단, 해당 DepositHistory의 depositPhase1에 예상치 못한 값이 있으면,
+     * 배분을 전혀 수행하지 않고 depositAmount 전체를 남김으로 처리합니다.
+     */
+    public long distributeDepositPaymentToPhases(Customer customer, DepositHistory dh, Map<Integer, Long> cumulativeDeposits) {
+        // depositPhase1 값 전처리: 공백 제거, 소문자 변환
+        String dp1 = dh.getDepositPhase1();
+        if (dp1 != null) {
+            dp1 = dp1.trim().toLowerCase();
+        }
+        // depositPhase1이 "", "0", "1", "2"가 아니면(예: "x") 해당 입금액을 배분하지 않음
+        if (dp1 != null && !(dp1.isEmpty() || dp1.equals("0") || dp1.equals("1") || dp1.equals("2"))) {
+            logger.info("depositPhase1 값이 '{}' 이므로 해당 입금은 phase 분배에 반영되지 않습니다.", dp1);
+            // depositAmount 전체를 leftover로 반환하는 대신 0L 반환하여 아예 배분하지 않음
+            return 0L;
+        }
+
+        // 정상적인 배분 로직 진행
+        long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
+        long remaining = depositAmt;
+        List<Phase> phases = customer.getPhases();
+        if (phases != null) {
+            phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
+        }
+        for (Phase phase : phases) {
+            int phaseNo = phase.getPhaseNumber();
+            long already = cumulativeDeposits.getOrDefault(phaseNo, 0L);
+            long feesum = (phase.getFeesum() != null ? phase.getFeesum() : 0L);
+            long discount = (phase.getDiscount() != null ? phase.getDiscount() : 0L);
+            long required = (feesum - discount) - already;
+            if (required <= 0) continue;
+            long allocation = Math.min(remaining, required);
+            if (allocation > 0) {
+                boolean wasZero = (already == 0L);
+                already += allocation;
+                remaining -= allocation;
+                phase.setCharged(already);
+                if (already >= (feesum - discount)) {
+                    if (dh.getTransactionDateTime() != null) {
+                        phase.setFullpaiddate(dh.getTransactionDateTime().toLocalDate());
+                    }
+                }
+                phase.setSum((feesum - discount) - already);
+                setDepositPhaseField(dh, phaseNo, wasZero ? "1" : "0");
+                cumulativeDeposits.put(phaseNo, already);
+            }
+            if (remaining <= 0) break;
+        }
+        return remaining;
+    }
+
+
+    // ================================================
+    // 3-2) 대출/자납 입금 분배 로직
+    // ================================================
+    /**
+     * 대출/자납 입금(loanStatus = 'o')의 경우,
+     * 누적 대출금 풀(runningLoanPool)의 금액을, DepositHistory의 targetPhases에 따라 배분합니다.
+     * 단, depositPhase1에 예상치 못한 값이 있으면 배분 계산을 전혀 수행하지 않습니다.
+     */
+
 
     /**
      * 특정 Phase 찾기 (phaseNumber 기준)
@@ -405,52 +443,7 @@ public class CustomerService {
      * 각 DepositHistory의 loanDetails에서 대출금액(loanammount)과 자납금액(selfammount)을 누적하여
      * Loan 객체를 업데이트합니다.
      */
-    public void updateLoanField(Customer customer) {
-        if (customer.getDepositHistories() == null) return;
-        if (customer.getLoan() == null) {
-            customer.setLoan(new Loan());
-        }
-        Loan customerLoan = customer.getLoan();
-        long totalLoanAmount = customer.getDepositHistories().stream()
-                .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
-                .mapToLong(dh -> {
-                    if (dh.getLoanDetails() != null && dh.getLoanDetails().getLoanammount() != null) {
-                        return dh.getLoanDetails().getLoanammount();
-                    }
-                    return 0L;
-                }).sum();
-        long totalSelfAmount = customer.getDepositHistories().stream()
-                .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
-                .mapToLong(dh -> {
-                    if (dh.getLoanDetails() != null && dh.getLoanDetails().getSelfammount() != null) {
-                        return dh.getLoanDetails().getSelfammount();
-                    }
-                    return 0L;
-                }).sum();
-        customerLoan.setLoanammount(totalLoanAmount);
-        customerLoan.setSelfammount(totalSelfAmount);
-        DepositHistory mostRecentLoan = customer.getDepositHistories().stream()
-                .filter(dh -> "o".equalsIgnoreCase(dh.getLoanStatus()))
-                .max(Comparator.comparing(DepositHistory::getTransactionDateTime))
-                .orElse(null);
-        if (mostRecentLoan != null) {
-            if (mostRecentLoan.getLoanDate() != null) {
-                customerLoan.setLoandate(mostRecentLoan.getLoanDate());
-            }
-            if (mostRecentLoan.getLoanDetails() != null) {
-                if (mostRecentLoan.getLoanDetails().getLoanbank() != null) {
-                    customerLoan.setLoanbank(mostRecentLoan.getLoanDetails().getLoanbank());
-                }
-                if (mostRecentLoan.getLoanDetails().getSelfdate() != null) {
-                    customerLoan.setSelfdate(mostRecentLoan.getLoanDetails().getSelfdate());
-                }
-            }
-        }
-        if (customer.getStatus() != null && customer.getStatus().getLoanExceedAmount() != null) {
-            customerLoan.setLoanselfcurrent(customer.getStatus().getLoanExceedAmount());
-        }
-        customerRepository.save(customer);
-    }
+
 
     // ================================================
     // 6) 다음 고객번호 조회
@@ -752,5 +745,6 @@ public class CustomerService {
         }
         return customers;
     }
+
 
 }

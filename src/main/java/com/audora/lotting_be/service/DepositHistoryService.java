@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DepositHistoryService {
@@ -127,7 +128,13 @@ public class DepositHistoryService {
         depositHistoryRepository.delete(dh);
 
         try {
-            // 재계산: depositPhase1이 허용된 값("0", "1", "2")일 때만 처리
+            // 삭제 후 고객의 depositHistories 컬렉션을 DB에서 새로 조회하여 최신 상태로 갱신
+            customer.setDepositHistories(
+                    depositHistoryRepository.findAll().stream()
+                            .filter(history -> history.getCustomer().getId().equals(customer.getId()))
+                            .collect(Collectors.toList())
+            );
+            // 재계산: depositPhase1이 허용된 값("0", "1", "2")일 때만 처리 (대출 기록도 depositPhase1가 null이면 재계산)
             if (dh.getDepositPhase1() == null ||
                     ("0".equals(dh.getDepositPhase1()) ||
                             "1".equals(dh.getDepositPhase1()) ||
@@ -140,4 +147,5 @@ public class DepositHistoryService {
         }
         logger.info("deleteDepositHistory 완료. 대상 DepositHistory id: {}", id);
     }
+
 }

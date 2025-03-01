@@ -2,6 +2,7 @@ package com.audora.lotting_be.service;
 
 import com.audora.lotting_be.model.customer.Customer;
 import com.audora.lotting_be.model.customer.DepositHistory;
+import com.audora.lotting_be.model.customer.minor.Loan;
 import com.audora.lotting_be.repository.CustomerRepository;
 import com.audora.lotting_be.repository.DepositHistoryRepository;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -62,49 +64,46 @@ public class DepositExcelService {
                     DepositHistory dh = new DepositHistory();
 
                     // A: 거래 id (인덱스 0)
-                    String idStr = formatter.formatCellValue(row.getCell(0));
-                    if (!idStr.isEmpty()) {
-                        try {
-                            dh.setId(Long.parseLong(idStr.replaceAll("[^0-9]", "")));
-                        } catch (NumberFormatException e) {
-                            logger.warn("행 {}: 거래 id 파싱 실패 - {}", i, e.getMessage());
-                        }
-                    }
+//                    String idStr = formatter.formatCellValue(row.getCell(0));
+//                    if (!idStr.isEmpty()) {
+//                        try {
+//                            dh.setId(Long.parseLong(idStr.replaceAll("[^0-9]", "")));
+//                        } catch (NumberFormatException e) {
+//                            logger.warn("행 {}: 거래 id 파싱 실패 - {}", i, e.getMessage());
+//                        }
+//                    }
 
+// 거래일시 처리 (셀 인덱스 1)
                     Cell cellB = row.getCell(1);
                     LocalDateTime transactionDateTime = null;
                     if (cellB != null) {
-                        // 우선 DataFormatter로 문자열 추출
                         String dateStr = formatter.formatCellValue(cellB);
                         if (!dateStr.isEmpty()) {
-                            // 1) 개행(\n, \r\n) 제거(공백 치환)
-                            String cleaned = dateStr.replaceAll("[\r\n]+", " ").trim();
-                            // 예: "2022.03.18\n15:17:42" → "2022.03.18 15:17:42"
-
-                            // 2) 복수 패턴 시도
+                            String cleaned = dateStr.replaceAll("[\\r\\n]+", " ").trim();
                             String[] patterns = {
                                     "yyyy.MM.dd HH:mm:ss",
                                     "yyyy-MM-dd HH:mm:ss",
-                                    // 필요하다면 더 추가 가능
+                                    "yyyy.MM.dd"  // 시간 정보 없음
                             };
-
                             for (String pattern : patterns) {
                                 try {
-                                    DateTimeFormatter customDtf = DateTimeFormatter.ofPattern(pattern);
-                                    transactionDateTime = LocalDateTime.parse(cleaned, customDtf);
-                                    // 성공하면 루프 탈출
-                                    break;
+                                    DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
+                                    if (pattern.equals("yyyy.MM.dd")) {
+                                        LocalDate ld = LocalDate.parse(cleaned, dtf2);
+                                        transactionDateTime = ld.atStartOfDay();
+                                    } else {
+                                        transactionDateTime = LocalDateTime.parse(cleaned, dtf2);
+                                    }
+                                    break; // 성공하면 루프 탈출
                                 } catch (Exception ex) {
-                                    // 실패하면 다음 패턴으로 넘어감
+                                    logger.warn("행 {}: 거래일시 '{}' 파싱 실패 with pattern {}: {}", i, cleaned, pattern, ex.getMessage());
                                 }
                             }
-
                             if (transactionDateTime == null) {
                                 logger.warn("행 {}: 거래일시 '{}' 파싱 실패 (시도한 패턴: {})", i, cleaned, String.join(", ", patterns));
                             }
                         }
                     }
-
                     dh.setTransactionDateTime(transactionDateTime);
 
                     // C: 적요 (인덱스 2)
@@ -152,11 +151,13 @@ public class DepositExcelService {
                         }
                     }
 
-                    // G: 맡기신금액 (인덱스 6)
+                    // 맡기신금액 처리 (셀 인덱스 6)
                     String depositAmtStr = formatter.formatCellValue(row.getCell(6));
+                    long depositAmt = 0L;
                     if (!depositAmtStr.isEmpty()) {
                         try {
-                            dh.setDepositAmount(Long.parseLong(depositAmtStr.replaceAll("[^0-9]", "")));
+                            depositAmt = Long.parseLong(depositAmtStr.replaceAll("[^0-9]", ""));
+                            dh.setDepositAmount(depositAmt);
                         } catch (Exception ex) {
                             logger.warn("행 {}: 맡기신금액 파싱 실패 - {}", i, ex.getMessage());
                         }
@@ -181,17 +182,39 @@ public class DepositExcelService {
 
                     // V: selfRecord (인덱스 21)
                     String selfRecord = formatter.formatCellValue(row.getCell(21)).trim();
-                    dh.setSelfRecord(selfRecord);
-
                     // W: loanRecord (인덱스 22)
                     String loanRecord = formatter.formatCellValue(row.getCell(22)).trim();
-                    dh.setLoanRecord(loanRecord);
 
-                    // selfRecord와 loanRecord 중 하나라도 값이 있으면 loanStatus를 "o"로 설정
+
+                    // selfRecord 또는 loanRecord 값이 있다면 대출/자납 기록으로 처리
                     if (!selfRecord.isEmpty() || !loanRecord.isEmpty()) {
                         dh.setLoanStatus("o");
+
+                        // 만약 loanRecord 값이 있다면 우선 loanammount에 depositAmt 저장
+                        if (!loanRecord.isEmpty()) {
+                            dh.setLoanRecord(loanRecord);
+                            // loan_details 객체가 없으면 새로 생성
+                            if (dh.getLoanDetails() == null) {
+                                dh.setLoanDetails(new Loan());
+                            }
+                            dh.getLoanDetails().setLoanammount(depositAmt);
+                        } else if (!selfRecord.isEmpty()) {
+                            // loanRecord가 없고 selfRecord만 있으면 selfammount에 depositAmt 저장
+                            dh.setSelfRecord(selfRecord);
+                            if (dh.getLoanDetails() == null) {
+                                dh.setLoanDetails(new Loan());
+                            }
+                            dh.getLoanDetails().setSelfammount(depositAmt);
+                        }
+                        // loanStatus가 "o"인 경우 loanselfsum에는 depositAmt를 저장
+                        if (dh.getLoanDetails() == null) {
+                            dh.setLoanDetails(new Loan());
+                        }
+                        dh.getLoanDetails().setLoanselfsum(depositAmt);
                     } else {
                         dh.setLoanStatus("");
+                        dh.setSelfRecord("");
+                        dh.setLoanRecord("");
                     }
 
                     // loanStatus가 "o"라면, depositPhase1~10 중 값이 있는 항목의 Phase 번호를 targetPhases에 추가
@@ -229,7 +252,15 @@ public class DepositExcelService {
                         }
                         dh.setTargetPhases(targetPhases);
                     }
-
+// 기존에 다른 셀들을 읽은 후, depositPhase1 셀을 추가로 읽습니다.
+                    Cell depositPhase1Cell = row.getCell(11);
+                    if (depositPhase1Cell != null) {
+                        String depositPhase1Value = formatter.formatCellValue(depositPhase1Cell).trim();
+                        dh.setDepositPhase1(depositPhase1Value);
+                        logger.info("Row {} depositPhase1 값: {}", i, depositPhase1Value);
+                    } else {
+                        logger.info("Row {} depositPhase1 셀이 비어 있습니다.", i);
+                    }
                     // 저장 및 재계산 호출
                     depositHistoryService.createDepositHistory(dh);
                     logger.info("행 {} 처리 완료.", i);

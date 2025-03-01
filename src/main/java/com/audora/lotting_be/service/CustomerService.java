@@ -111,6 +111,7 @@ public class CustomerService {
 // 기존 recalculateEverything 메서드의 수정 버전 (대출/자납 입금기록은 수동 Loan 값을 소진하는 로직)
 // CustomerService.java
 
+
     public void recalculateEverything(Customer customer) {
         // 1) 각 Phase 초기화 (일반 입금용)
         if (customer.getPhases() != null) {
@@ -153,45 +154,61 @@ public class CustomerService {
                 } else {
                     // 대출/자납 입금 기록:
                     long depositAmt = (dh.getDepositAmount() != null ? dh.getDepositAmount() : 0L);
-                    // 대상 Phase에 배분 (targetPhases가 지정된 경우)
                     AtomicLong localLoanPool = new AtomicLong(depositAmt);
                     List<Integer> targetList = dh.getTargetPhases();
+                    // 신규 메서드를 호출하여 각 phase별 배분액을 수집합니다.
+                    Map<Integer, Long> allocationForThisRecord = new HashMap<>();
                     if (targetList != null && !targetList.isEmpty()) {
-                        distributeLoanDepositPaymentToPhases(customer, dh, cumulativeDeposits, localLoanPool);
+                        allocationForThisRecord = distributeLoanDepositPaymentToPhasesAndCollectAllocation(customer, dh, cumulativeDeposits, localLoanPool);
                     }
-                    // loan_details 값 확인
+
+                    // loan_record, self_record 설정
                     boolean hasLoanValue = (dh.getLoanDetails() != null &&
                             dh.getLoanDetails().getLoanammount() != null &&
                             dh.getLoanDetails().getLoanammount() > 0);
                     boolean hasSelfValue = (dh.getLoanDetails() != null &&
                             dh.getLoanDetails().getSelfammount() != null &&
                             dh.getLoanDetails().getSelfammount() > 0);
-
-                    // 조건에 따라 loan_record와 self_record 설정
                     if (hasLoanValue) {
-                        if (countLoanRecords == 0) {
-                            dh.setLoanRecord("1");
-                        } else {
-                            dh.setLoanRecord("0");
-                        }
+                        dh.setLoanRecord(countLoanRecords == 0 ? "1" : "0");
                         countLoanRecords++;
                     } else {
                         dh.setLoanRecord(null);
                     }
                     if (hasSelfValue) {
-                        if (countSelfRecords == 0) {
-                            dh.setSelfRecord("1");
-                        } else {
-                            dh.setSelfRecord("0");
-                        }
+                        dh.setSelfRecord(countSelfRecords == 0 ? "1" : "0");
                         countSelfRecords++;
                     } else {
                         dh.setSelfRecord(null);
                     }
                     depositHistoryRepository.save(dh);
-                    // 실제 사용된 금액 = 입금액 - 배분 후 남은 금액
+
+                    // 실제 사용된 금액 = depositAmt - localLoanPool.get()
                     long usedAmount = depositAmt - localLoanPool.get();
                     loanConsumedSum += usedAmount;
+
+                    // 신규: 배분된 결과를 JSON 형식으로 작성
+                    StringBuilder allocationDetailJson = new StringBuilder("{");
+                    for (Integer phaseNo : allocationForThisRecord.keySet()) {
+                        Phase phase = findPhaseByNumber(customer.getPhases(), phaseNo);
+                        if (phase != null) {
+                            long allocated = allocationForThisRecord.get(phaseNo);
+                            long required = (phase.getFeesum() != null ? phase.getFeesum() : 0L)
+                                    - (phase.getDiscount() != null ? phase.getDiscount() : 0L);
+                            // remainingNeeded는 phase에 현재 누적된 charged값(재계산 후)에서 계산
+                            long remainingNeeded = required - (phase.getCharged() != null ? phase.getCharged() : 0L);
+                            if (remainingNeeded < 0) remainingNeeded = 0;
+                            allocationDetailJson.append("\"phase").append(phaseNo).append("\":")
+                                    .append("{\"allocated\":").append(allocated)
+                                    .append(",\"remainingNeeded\":").append(remainingNeeded)
+                                    .append("},");
+                        }
+                    }
+                    if (allocationDetailJson.charAt(allocationDetailJson.length() - 1) == ',') {
+                        allocationDetailJson.deleteCharAt(allocationDetailJson.length() - 1);
+                    }
+                    allocationDetailJson.append("}");
+                    dh.setAllocationDetail(allocationDetailJson.toString());
                 }
             }
         }
@@ -214,6 +231,47 @@ public class CustomerService {
         updateStatusFields(customer);
         updateLoanField(customer);
         customerRepository.save(customer);
+    }
+
+    private Map<Integer, Long> distributeLoanDepositPaymentToPhasesAndCollectAllocation(Customer customer,
+                                                                                        DepositHistory dh,
+                                                                                        Map<Integer, Long> cumulativeDeposits,
+                                                                                        AtomicLong runningLoanPool) {
+        Map<Integer, Long> allocationMap = new HashMap<>();
+        List<Integer> targetList = dh.getTargetPhases();
+        List<Phase> phases = customer.getPhases();
+        if (phases != null) {
+            phases.sort(Comparator.comparingInt(Phase::getPhaseNumber));
+        }
+        if (targetList != null) {
+            for (Integer phaseNo : targetList) {
+                Phase phase = findPhaseByNumber(phases, phaseNo);
+                if (phase == null) continue;
+                long already = cumulativeDeposits.getOrDefault(phaseNo, 0L);
+                long feesum = (phase.getFeesum() != null) ? phase.getFeesum() : 0L;
+                // 할인액은 무시: required = feesum - already;
+                long required = feesum - already;
+                if (required <= 0) continue;
+                long allocation = Math.min(runningLoanPool.get(), required);
+                if (allocation > 0) {
+                    boolean wasZero = (already == 0L);
+                    already += allocation;
+                    runningLoanPool.set(runningLoanPool.get() - allocation);
+                    phase.setCharged(already);
+                    if (already >= feesum) {
+                        if (dh.getTransactionDateTime() != null) {
+                            phase.setFullpaiddate(dh.getTransactionDateTime().toLocalDate());
+                        }
+                    }
+                    phase.setSum(feesum - already);
+                    setDepositPhaseField(dh, phaseNo, wasZero ? "1" : "0");
+                    cumulativeDeposits.put(phaseNo, already);
+                    allocationMap.put(phaseNo, allocation);
+                }
+                if (runningLoanPool.get() <= 0) break;
+            }
+        }
+        return allocationMap;
     }
 
 

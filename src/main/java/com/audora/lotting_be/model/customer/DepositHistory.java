@@ -99,4 +99,6 @@ public class DepositHistory {
     @JoinColumn(name = "customer_id")
     @JsonBackReference(value = "customer-depositHistories")
     private Customer customer;
+
+    private String allocationDetail; //기록용
 }

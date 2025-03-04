@@ -376,11 +376,14 @@ public class DepositExcelService {
                 cell.setCellValue(dh.getAccount() != null ? dh.getAccount() : "");
                 col++;
 
+                col++;
+
                 // Column 10: depositPhase1
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase1() != null ? dh.getDepositPhase1() : "");
                 col++;
+
 
                 // Column 11: depositPhase2
                 cell = row.getCell(col);

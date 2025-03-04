@@ -685,14 +685,15 @@ public class CustomerService {
                 customers = Collections.emptyList();
             }
         } else {
-            Pageable pageable = PageRequest.of(0, 30, Sort.by("id"));
-            customers = customerRepository.findAll(pageable).getContent();
+            // 파라미터가 없으면 모든 고객을 반환
+            customers = customerRepository.findAll();
         }
         // id가 1인 더미 데이터는 필터링
         return customers.stream()
                 .filter(customer -> !customer.getId().equals(1))
                 .collect(Collectors.toList());
     }
+
 
 
     // ================================================

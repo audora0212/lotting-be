@@ -1336,7 +1336,7 @@ public class ExcelService {
 
             XSSFSheet sheet = workbook.getSheetAt(0);
             // 예제에서는 4번째 행(인덱스 3)부터 고객 데이터가 시작된다고 가정합니다.
-            int startRow = 3;
+            int startRow = 2;
             int lastRow = sheet.getLastRowNum();
             // 3) A열이 비어있는 행을 만나면 중단, 그 직전까지를 "유효한 마지막 행"으로 설정
             int realLastRow = startRow;

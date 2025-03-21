@@ -1,3 +1,4 @@
+// src/main/java/com/audora/lotting_be/controller/CustomerController.java
 package com.audora.lotting_be.controller;
 
 import com.audora.lotting_be.model.customer.Customer;
@@ -6,11 +7,13 @@ import com.audora.lotting_be.model.customer.minor.*;
 import com.audora.lotting_be.payload.response.MessageResponse;
 import com.audora.lotting_be.service.CustomerService;
 import com.audora.lotting_be.service.PhaseService;
+import com.audora.lotting_be.service.RefundService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/customers")
@@ -21,6 +24,9 @@ public class CustomerController {
 
     @Autowired
     private PhaseService phaseService;
+
+    @Autowired
+    private RefundService refundService;
 
     @GetMapping("/nextId")
     public ResponseEntity<Integer> getNextCustomerId() {
@@ -36,7 +42,7 @@ public class CustomerController {
         } else {
             System.out.println("Deposits is null");
         }
-        Customer createdCustomer = customerService.createCustomer(customer,true);
+        Customer createdCustomer = customerService.createCustomer(customer, true);
         return ResponseEntity.ok(createdCustomer);
     }
 
@@ -152,13 +158,6 @@ public class CustomerController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Integer id, @RequestBody Customer updatedCustomer) {
-        System.out.println("========== Updated Customer JSON Data ==========");
-        System.out.println(updatedCustomer);
-        if (updatedCustomer.getAttachments() != null) {
-            System.out.println("Prize Name: " + updatedCustomer.getAttachments().getPrizename());
-            System.out.println("Prize Date: " + updatedCustomer.getAttachments().getPrizedate());
-        }
-        System.out.println("===============================================");
 
         Customer existingCustomer = customerService.getCustomerById(id);
         if (existingCustomer == null) {
@@ -293,7 +292,7 @@ public class CustomerController {
             existingCustomer.getAgenda().setAgenda10(updatedCustomer.getAgenda().getAgenda10());
         }
 
-        // 14. Attachments 업데이트 (첨부파일, 체크박스, 사은품 관련 등)\n
+        // 14. Attachments 업데이트 (첨부파일, 체크박스, 사은품 관련 등)
         existingCustomer.getAttachments().setIsuploaded(updatedCustomer.getAttachments().getIsuploaded());
         existingCustomer.getAttachments().setSealcertificateprovided(updatedCustomer.getAttachments().getSealcertificateprovided());
         existingCustomer.getAttachments().setSelfsignatureconfirmationprovided(updatedCustomer.getAttachments().getSelfsignatureconfirmationprovided());
@@ -311,9 +310,25 @@ public class CustomerController {
         existingCustomer.getAttachments().setPrizename(updatedCustomer.getAttachments().getPrizename());
         existingCustomer.getAttachments().setPrizedate(updatedCustomer.getAttachments().getPrizedate());
 
-        customerService.saveCustomer(existingCustomer);
-        customerService.recalculateEverything(existingCustomer);
+        // 15. Cancel 업데이트 (해지 정보)
+        if (updatedCustomer.getCancel() != null) {
+            if (existingCustomer.getCancel() == null) {
+                existingCustomer.setCancel(new Cancel());
+            }
+            existingCustomer.getCancel().setCanceldate(updatedCustomer.getCancel().getCanceldate());
+            existingCustomer.getCancel().setRefunddate(updatedCustomer.getCancel().getRefunddate());
+            existingCustomer.getCancel().setRefundamount(updatedCustomer.getCancel().getRefundamount());
+        }
 
+        // 고객 저장 및 전체 재계산
+        Customer saved = customerService.saveCustomer(existingCustomer);
+        customerService.recalculateEverything(saved);
+
+        // 16. 만약 고객 분류가 "x" (해지)라면, 프론트엔드에서 전달된 cancelInfo를 함께 전달합니다.
+        // Customer 엔티티에 transient cancelInfo 필드가 추가되어 있다고 가정합니다.
+        if ("x".equalsIgnoreCase(saved.getCustomertype())) {
+            refundService.createRefundRecord(saved, updatedCustomer.getCancelInfo());
+        }
         return ResponseEntity.ok(existingCustomer);
     }
 

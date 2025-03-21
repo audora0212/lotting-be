@@ -74,16 +74,13 @@ public class DepositHistoryController {
     // ─────────────────────────────────────────────────────
     @GetMapping("/phase-summary")
     public ResponseEntity<List<PhaseSummaryDTO>> getPhaseSummaries() {
-        // 모든 고객과 그에 연결된 phase들을 조회 (고객에 대한 재계산은 이미 수행되었다고 가정)
         List<Customer> customers = customerService.getAllCustomersWithPhases();
 
-        // 1차부터 10차까지 각 phase의 합계를 저장할 DTO를 초기화
         Map<Integer, PhaseSummaryDTO> summaryMap = new HashMap<>();
         for (int phase = 1; phase <= 10; phase++) {
             summaryMap.put(phase, new PhaseSummaryDTO(phase, 0L, 0L));
         }
 
-        // 모든 고객의 phase 정보를 순회하여 각 phase의 charged와 sum을 누적
         for (Customer customer : customers) {
             if (customer.getPhases() != null) {
                 for (Phase phase : customer.getPhases()) {
@@ -97,13 +94,11 @@ public class DepositHistoryController {
             }
         }
 
-        // 결과를 phase 번호 순서대로 리스트로 변환
         List<PhaseSummaryDTO> summaries = new ArrayList<>(summaryMap.values());
         summaries.sort(Comparator.comparingInt(PhaseSummaryDTO::getPhaseNumber));
         return ResponseEntity.ok(summaries);
     }
 
-    // DTO 클래스: 각 phase의 번호, 총 입금액, 미납액
     public static class PhaseSummaryDTO {
         private int phaseNumber;
         private Long totalDeposited;

@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Data
@@ -89,4 +90,15 @@ public class Customer {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     @JsonManagedReference(value = "customer-depositHistories")
     private List<DepositHistory> depositHistories;
+
+    @Transient
+    private Map<String, Object> cancelInfo;
+
+    public Map<String, Object> getCancelInfo() {
+        return cancelInfo;
+    }
+
+    public void setCancelInfo(Map<String, Object> cancelInfo) {
+        this.cancelInfo = cancelInfo;
+    }
 }

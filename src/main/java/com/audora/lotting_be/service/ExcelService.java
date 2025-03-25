@@ -1297,8 +1297,7 @@ public class ExcelService {
                 // Column FN (169): 부속서류 사은품명
                 Cell cellFN = row.getCell(169);
                 if (cellFN == null) cellFN = row.createCell(169);
-                cellFN.setCellValue((customer.getAttachments() != null && customer.getAttachments().getPrizename() != null)
-                        ? customer.getAttachments().getPrizename() : "");
+                cellFN.setCellValue(customer.getPrizewinning() != null ? customer.getPrizewinning() : "");
 
                 // Column FO (170): 부속서류 출자금 (flag "o")
                 Cell cellFO = row.getCell(170);
@@ -2382,8 +2381,8 @@ public class ExcelService {
         customer.getAgenda().setAgenda10(colFM_final);
         // FN: 0-based 169
         String colFN_final = formatter.formatCellValue(row.getCell(169), evaluator);
-        System.out.println("Column FN (부속서류 사은품명): " + colFN_final);
-        customer.getAttachments().setPrizename(colFN_final);
+        System.out.println("Column FN (경품당첨 prizewinning): " + colFN_final);
+        customer.setPrizewinning(colFN_final);
         // FO: 0-based 170
         String colFO_final = formatter.formatCellValue(row.getCell(170), evaluator);
         System.out.println("Column FO (부속서류 출자금): " + colFO_final);

@@ -39,6 +39,6 @@ out/
 .vscode/
 
 # 민감한 설정 파일은 Git에 포함되지 않도록 설정
-src/main/resources/application-prod.properties
+src/main/resources/application.properties
 src/main/resources/secret.properties
 .env

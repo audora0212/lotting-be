@@ -5,6 +5,7 @@ package com.audora.lotting_be.config;
 import com.audora.lotting_be.security.AuthTokenFilter;
 import com.audora.lotting_be.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +22,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true) // 메서드 단위 보안 활성화
@@ -32,13 +35,17 @@ public class SecurityConfig {
     @Autowired
     private AuthTokenFilter authTokenFilter;
 
+    // allowed.origins 값을 application.properties (또는 외부 설정)에서 주입 받음.
+    @Value("${allowed.origins}")
+    private String allowedOrigins;
+
     // AuthenticationManager 빈 정의
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
-    // PasswordEncoder 빈 정의
+    // PasswordEncoder 빈 정의 (BCrypt 사용)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -49,8 +56,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 허용할 출처(Origin) 설정
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://3.38.181.18:3000"));
+        // allowed.origins 값 (쉼표로 구분된 문자열)을 리스트로 변환하고, 각 원소의 공백을 제거
+        List<String> allowedOriginList = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+        configuration.setAllowedOrigins(allowedOriginList);
 
         // 허용할 HTTP 메서드 설정
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -81,10 +91,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // JWT 필터 추가 부분은 남겨두되, 현재는 인증을 요구하지 않으므로 실질적으로 효과가 없음
+        // JWT 필터 추가 (현재는 인증 요구가 없으나, 추후 필요 시 활성화)
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }

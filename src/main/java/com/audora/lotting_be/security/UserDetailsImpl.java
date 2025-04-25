@@ -45,7 +45,6 @@ public class UserDetailsImpl implements UserDetails {
         return authorities;
     }
 
-    // 기타 메서드는 기본 구현을 따릅니다
     @Override
     public boolean isAccountNonExpired() {
         return true;

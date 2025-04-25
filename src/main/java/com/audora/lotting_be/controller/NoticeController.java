@@ -16,14 +16,12 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
-    // 공지사항 등록
     @PostMapping
     public ResponseEntity<Notice> createNotice(@RequestBody Notice notice) {
         Notice created = noticeService.createNotice(notice);
         return ResponseEntity.ok(created);
     }
 
-    // 공지사항 수정
     @PutMapping("/{id}")
     public ResponseEntity<?> updateNotice(@PathVariable Long id, @RequestBody Notice notice) {
         try {
@@ -34,14 +32,12 @@ public class NoticeController {
         }
     }
 
-    // 공지사항 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteNotice(@PathVariable Long id) {
         noticeService.deleteNotice(id);
         return ResponseEntity.ok(new MessageResponse("Notice deleted successfully."));
     }
 
-    // 공지사항 단일 조회
     @GetMapping("/{id}")
     public ResponseEntity<Notice> getNoticeById(@PathVariable Long id) {
         Optional<Notice> notice = noticeService.getNoticeById(id);
@@ -49,14 +45,12 @@ public class NoticeController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // 공지사항 검색 (제목 또는 내용에 keyword 포함)
     @GetMapping("/search")
     public ResponseEntity<List<Notice>> searchNotices(@RequestParam(required = false) String keyword) {
         List<Notice> notices = noticeService.searchNotices(keyword);
         return ResponseEntity.ok(notices);
     }
 
-    // 전체 공지사항 목록 조회
     @GetMapping
     public ResponseEntity<List<Notice>> getAllNotices() {
         List<Notice> notices = noticeService.getAllNotices();

@@ -15,7 +15,7 @@ public class CancelledCustomerRefund {
 
     // 고객 기본 정보
     private String name;                // 성명
-    private String residentNumber;      // 주민번호 (예: "123456-1234567")
+    private String residentNumber;      // 주민번호
     private String source;              // 출처 (예: 가입경로 등)
 
     // 납입 정보

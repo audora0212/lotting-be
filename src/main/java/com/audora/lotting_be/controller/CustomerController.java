@@ -110,12 +110,7 @@ public class CustomerController {
         return ResponseEntity.ok(customer.getLoan());
     }
 
-    /**
-     * [수정됨] 대출/자납 업데이트:
-     * 1) Loan 필드 업데이트
-     * 2) customerService.saveCustomer(...)
-     * 3) customerService.recalculateEverything(...)
-     */
+
     @PutMapping("/{id}/loan")
     public ResponseEntity<Customer> updateLoanByCustomerId(@PathVariable Integer id, @RequestBody Loan updatedLoan) {
         Customer customer = customerService.getCustomerById(id);
@@ -134,11 +129,8 @@ public class CustomerController {
         loan.setSelfammount(updatedLoan.getSelfammount());
         customer.setLoan(loan);
 
-        System.out.println("============================================");
 
-        // 우선 저장
         customerService.saveCustomer(customer);
-        // 전체 재계산
         customerService.recalculateEverything(customer);
 
         return ResponseEntity.ok(customer);
@@ -178,7 +170,7 @@ public class CustomerController {
         existingCustomer.setPrizewinning(updatedCustomer.getPrizewinning());
         existingCustomer.setVotemachine(updatedCustomer.getVotemachine());
 
-        // 2. CustomerData 업데이트 (기본 생성되어 있으므로 null이 아님)
+        // 2. CustomerData 업데이트
         existingCustomer.getCustomerData().setName(updatedCustomer.getCustomerData().getName());
         existingCustomer.getCustomerData().setPhone(updatedCustomer.getCustomerData().getPhone());
         existingCustomer.getCustomerData().setResnumfront(updatedCustomer.getCustomerData().getResnumfront());
@@ -292,7 +284,7 @@ public class CustomerController {
             existingCustomer.getAgenda().setAgenda10(updatedCustomer.getAgenda().getAgenda10());
         }
 
-        // 14. Attachments 업데이트 (첨부파일, 체크박스, 사은품 관련 등)
+        // 14. Attachments 업데이트
         existingCustomer.getAttachments().setIsuploaded(updatedCustomer.getAttachments().getIsuploaded());
         existingCustomer.getAttachments().setSealcertificateprovided(updatedCustomer.getAttachments().getSealcertificateprovided());
         existingCustomer.getAttachments().setSelfsignatureconfirmationprovided(updatedCustomer.getAttachments().getSelfsignatureconfirmationprovided());
@@ -320,12 +312,9 @@ public class CustomerController {
             existingCustomer.getCancel().setRefundamount(updatedCustomer.getCancel().getRefundamount());
         }
 
-        // 고객 저장 및 전체 재계산
         Customer saved = customerService.saveCustomer(existingCustomer);
         customerService.recalculateEverything(saved);
 
-        // 16. 만약 고객 분류가 "x" (해지)라면, 프론트엔드에서 전달된 cancelInfo를 함께 전달합니다.
-        // Customer 엔티티에 transient cancelInfo 필드가 추가되어 있다고 가정합니다.
         if ("x".equalsIgnoreCase(saved.getCustomertype())) {
             refundService.createRefundRecord(saved, updatedCustomer.getCancelInfo());
         }

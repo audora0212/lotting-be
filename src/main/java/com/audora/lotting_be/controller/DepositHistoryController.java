@@ -12,9 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-// 기존 @RestController, @RequestMapping("/deposit") 그대로 유지
 @RestController
-@RequestMapping("/deposit") // 입금내역 관련 엔드포인트
+@RequestMapping("/deposit")
 public class DepositHistoryController {
 
     @Autowired
@@ -26,8 +25,6 @@ public class DepositHistoryController {
     @Autowired
     private DepositHistoryRepository depositHistoryRepository;
 
-    // [GET] 특정 고객의 입금내역 조회
-    // URL 예: GET /deposit/customer/123
     @GetMapping("/customer/{userId}")
     public ResponseEntity<List<DepositHistory>> getDepositHistoriesByCustomerId(@PathVariable Integer userId) {
         Customer customer = customerService.getCustomerById(userId);
@@ -38,7 +35,6 @@ public class DepositHistoryController {
         return ResponseEntity.ok(depositHistories);
     }
 
-    // [GET] 단일 입금내역 조회
     @GetMapping("/{id}")
     public ResponseEntity<DepositHistory> getDepositHistoryById(@PathVariable Long id) {
         Optional<DepositHistory> depositHistoryOpt = depositHistoryRepository.findById(id);
@@ -46,14 +42,12 @@ public class DepositHistoryController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // [POST] 입금내역 생성
     @PostMapping
     public ResponseEntity<DepositHistory> createDepositHistory(@RequestBody DepositHistory depositHistory) {
         DepositHistory saved = depositHistoryService.createDepositHistory(depositHistory);
         return ResponseEntity.ok(saved);
     }
 
-    // [PUT] 입금내역 수정
     @PutMapping("/{id}")
     public ResponseEntity<DepositHistory> updateDepositHistory(
             @PathVariable Long id,
@@ -62,16 +56,12 @@ public class DepositHistoryController {
         return ResponseEntity.ok(updated);
     }
 
-    // [DELETE] 입금내역 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDepositHistory(@PathVariable Long id) {
         depositHistoryService.deleteDepositHistory(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ─────────────────────────────────────────────────────
-    // 새로운 엔드포인트: 1차 ~ 10차의 총 입금액(charged)과 미납액(sum) 리턴
-    // ─────────────────────────────────────────────────────
     @GetMapping("/phase-summary")
     public ResponseEntity<List<PhaseSummaryDTO>> getPhaseSummaries() {
         List<Customer> customers = customerService.getAllCustomersWithPhases();

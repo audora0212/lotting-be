@@ -40,7 +40,6 @@ public class NoticeService {
         if (keyword == null || keyword.isEmpty()) {
             return noticeRepository.findAll();
         }
-        // 제목과 내용 모두에서 keyword 검색 후 중복 제거
         List<Notice> byTitle = noticeRepository.findByTitleContainingIgnoreCase(keyword);
         List<Notice> byContent = noticeRepository.findByContentContainingIgnoreCase(keyword);
         byTitle.addAll(byContent);

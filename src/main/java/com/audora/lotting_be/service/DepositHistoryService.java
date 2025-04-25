@@ -27,9 +27,7 @@ public class DepositHistoryService {
     @Autowired
     private CustomerService customerService;
 
-    /**
-     * 모든 DepositHistory 엔티티를 반환하는 메서드 (신규 추가)
-     */
+
     public List<DepositHistory> getAllDepositHistories() {
         return depositHistoryRepository.findAll();
     }
@@ -49,7 +47,6 @@ public class DepositHistoryService {
         DepositHistory saved = depositHistoryRepository.save(depositHistory);
 
         try {
-            // 재계산 유도 전 depositPhase1이 기록용(예상치 못한 값)인지 확인
                         if(!customer.getId().equals(1)){
                 if (depositHistory.getDepositPhase1() == null || depositHistory.getDepositPhase1().equals("") ||
                         ("0".equals(depositHistory.getDepositPhase1()) ||
@@ -61,7 +58,6 @@ public class DepositHistoryService {
             }
         } catch (Exception e) {
             logger.error("createDepositHistory 중 재계산 실패, 고객 id {}: {}", customer.getId(), e.getMessage());
-            // 필요시 추가 처리
         }
         saved = depositHistoryRepository.findById(saved.getId()).orElse(saved);
         logger.info("createDepositHistory 완료, 저장된 DepositHistory id: {}", saved.getId());
@@ -81,7 +77,6 @@ public class DepositHistoryService {
             }
         }
 
-        // 필드 업데이트 (depositPhase1~10은 기록용 값 유지)
         existing.setTransactionDateTime(updatedDepositHistory.getTransactionDateTime());
         existing.setDescription(updatedDepositHistory.getDescription());
         existing.setDetails(updatedDepositHistory.getDetails());
@@ -99,7 +94,6 @@ public class DepositHistoryService {
         DepositHistory saved = depositHistoryRepository.save(existing);
 
         try {
-            // 재계산: depositPhase1이 허용된 값일 때만 처리
             if (existing.getDepositPhase1() == null ||
                     ("0".equals(existing.getDepositPhase1()) ||
                             "1".equals(existing.getDepositPhase1()) ||
@@ -128,13 +122,11 @@ public class DepositHistoryService {
         depositHistoryRepository.delete(dh);
 
         try {
-            // 삭제 후 고객의 depositHistories 컬렉션을 DB에서 새로 조회하여 최신 상태로 갱신
             customer.setDepositHistories(
                     depositHistoryRepository.findAll().stream()
                             .filter(history -> history.getCustomer().getId().equals(customer.getId()))
                             .collect(Collectors.toList())
             );
-            // 재계산: depositPhase1이 허용된 값("0", "1", "2")일 때만 처리 (대출 기록도 depositPhase1가 null이면 재계산)
             if (dh.getDepositPhase1() == null ||
                     ("0".equals(dh.getDepositPhase1()) ||
                             "1".equals(dh.getDepositPhase1()) ||

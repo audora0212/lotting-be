@@ -56,20 +56,17 @@ public class ExcelService {
             for (int i = 0; i < total; i++) {
                 Customer customer = customers.get(i);
 
-                // 고객 id가 1이면 건너뛰기
                 if (customer.getId() == 1) {
                     continue;
                 }
                 System.out.println(customer.getId());
 
-                // 해당 행 가져오기(없으면 생성)
                 Row row = sheet.getRow(rowIndex);
                 if (row == null) {
                     row = sheet.createRow(rowIndex);
                 }
 
-                //고객정보 기입시작 code spread start
-                // ── 기본 정보 ──
+
                 // Column A (0): 관리번호
                 Cell cellA = row.getCell(0);
                 if (cellA == null) cellA = row.createCell(0);
@@ -1325,7 +1322,6 @@ public class ExcelService {
 
     public void processExcelFileWithProgress(MultipartFile file, SseEmitter emitter) throws IOException {
         DataFormatter formatter = new DataFormatter(Locale.getDefault());
-        // 날짜 파싱 포맷 (예: "yy-M-d")
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy-M-d");
 
         try (InputStream is = file.getInputStream();
@@ -1334,15 +1330,12 @@ public class ExcelService {
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
             XSSFSheet sheet = workbook.getSheetAt(0);
-            // 예제에서는 4번째 행(인덱스 3)부터 고객 데이터가 시작된다고 가정합니다.
             int startRow = 2;
             int lastRow = sheet.getLastRowNum();
-            // 3) A열이 비어있는 행을 만나면 중단, 그 직전까지를 "유효한 마지막 행"으로 설정
             int realLastRow = startRow;
             for (int i = startRow; i <= lastRow; i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) {
-                    // row 자체가 비어 있으면 중단
                     break;
                 }
 
@@ -1351,44 +1344,27 @@ public class ExcelService {
                 String valA = (cellA != null) ? formatter.formatCellValue(cellA).trim() : "";
 
                 if (valA.isEmpty()) {
-                    // A열이 공백이라면 여기서 데이터가 끝났다고 판단
                     break;
                 }
-                // 그렇지 않으면 유효한 데이터 행이므로 업데이트
                 realLastRow = i;
             }
-            // realLastRow가 최종 유효 행
-            // 따라서 totalCustomers = (realLastRow - startRow + 1)
             int totalCustomers = realLastRow >= startRow ? (realLastRow - startRow + 1) : 0;
 
-            // 각 행(고객)에 대해 처리
             for (int i = startRow; i <= realLastRow; i++) {
                 org.apache.poi.ss.usermodel.Row row = sheet.getRow(i);
                 if (row == null) {
-                    // 비어있는 행은 건너뜁니다.
                     continue;
                 }
-                // 각 행을 Customer 객체로 파싱 (필요한 모든 컬럼 매핑 구현)
                 Customer customer = parseCustomerFromRow(row, dtf, formatter, evaluator);
-                // DB에 저장 (여기서는 createCustomer 내부에서 Phase 등 추가 로직이 수행될 수 있음)
                 customerService.createCustomer(customer, false);
 
-                // 진행 상황 전송: 처리한 고객 수/전체 고객 수
                 int current = i - startRow + 1;
                 emitter.send(SseEmitter.event().name("progress").data(current + "/" + totalCustomers));
             }
         }
     }
 
-    /**
-     * 엑셀의 한 행(Row)을 읽어 Customer 객체로 매핑하는 예시 메서드
-     * 실제 구현에서는 모든 필요한 컬럼에 대해 값을 매핑하세요.
-     *
-     * @param row       엑셀의 한 행
-     * @param dtf       날짜 파싱 포맷
-     * @param formatter DataFormatter
-     * @return 매핑된 Customer 객체
-     */
+
     private Customer parseCustomerFromRow(org.apache.poi.ss.usermodel.Row row, DateTimeFormatter dtf, DataFormatter formatter,FormulaEvaluator evaluator) {
         Customer customer = new Customer();
         // 하위 임베디드 객체 초기화
@@ -1411,18 +1387,15 @@ public class ExcelService {
         status.setCustomer(customer);
         customer.setStatus(status);
 
-        // 예시 매핑
-        // Column A (인덱스 0): 관리번호
         String colAcode = formatter.formatCellValue(row.getCell(0));
         if (!colAcode.isEmpty()) {
             try {
                 customer.setId(Integer.parseInt(colAcode.replaceAll("[^0-9]+", "")));
             } catch (NumberFormatException e) {
-                // 필요시 로그 처리
             }
         }
 
-        //엑셀파일 해부시작 excel spread start
+
         // --- 첫 번째 섹션: A ~ CS (인덱스 0 ~ 96) ---
         String colA = formatter.formatCellValue(row.getCell(0), evaluator);
         System.out.println("Column A (관리번호): " + colA);
@@ -2387,13 +2360,11 @@ public class ExcelService {
         String colFO_final = formatter.formatCellValue(row.getCell(170), evaluator);
         System.out.println("Column FO (부속서류 출자금): " + colFO_final);
         customer.getAttachments().setInvestmentfile("o".equalsIgnoreCase(colFO_final));
-        //excel spread complete
-        // --- 매핑 끝 ---
+
         return customer;
     }
 
 
-    // 날짜 파싱 헬퍼: "yy-M-d" 형식을 우선 사용, 실패하면 "yyyy" 형식으로 파싱
     private LocalDate parseDate(String s, DateTimeFormatter dtf) {
         String text = s.replace("\"", "").trim();
         if (text.isEmpty()) {
@@ -2406,14 +2377,11 @@ public class ExcelService {
                 DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("yyyy");
                 return LocalDate.parse(text, dtf2);
             } catch (DateTimeParseException ex) {
-                // 날짜 형식이 아니면 null 반환하여 아무 값도 넣지 않음.
                 return null;
             }
         }
     }
 
-    // planneddateString 처리 헬퍼:
-    // 만약 s가 공란이면 null, 아니면 "yy-M-d" 형식으로 파싱 시도; 실패하면 2100-01-01 리턴.
     private LocalDate parsePlannedDate(String s) {
         if (s == null || s.trim().isEmpty()) {
             return null;
@@ -2427,7 +2395,6 @@ public class ExcelService {
         }
     }
 
-    // 셀에서 원본 날짜값(YYYY-MM-DD)을 추출하는 헬퍼
     private LocalDate getUnderlyingDate(Cell cell) {
         if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
             return cell.getDateCellValue().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -2435,7 +2402,6 @@ public class ExcelService {
         return null;
     }
 
-    // --- fillFormat1 메서드 (원본 로직 유지) ---
     public void fillFormat1(File tempFile, Customer customer) throws IOException {
         try (FileInputStream fis = new FileInputStream(tempFile);
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
@@ -2487,7 +2453,6 @@ public class ExcelService {
         }
     }
 
-    // --- fillFormat2 메서드 (원본 로직 유지) ---
     public void fillFormat2(File tempFile, Customer customer) throws IOException {
         try (FileInputStream fis = new FileInputStream(tempFile);
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
@@ -2531,7 +2496,6 @@ public class ExcelService {
         }
     }
 
-    // getCell 헬퍼 (fillFormat1, fillFormat2에서 사용)
     private Cell getCell(XSSFSheet sheet, int rowIndex, int colIndex) {
         Row row = sheet.getRow(rowIndex);
         if (row == null) {
@@ -2549,7 +2513,6 @@ public class ExcelService {
             return 0L;
         }
         try {
-            // 숫자 이외 문자 제거
             String cleaned = numericStr.replaceAll("[^0-9\\-]", "");
             return Long.parseLong(cleaned);
         } catch (NumberFormatException e) {

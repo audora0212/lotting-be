@@ -13,7 +13,6 @@ public class PhaseService {
     @Autowired
     private PhaseRepository phaseRepository;
 
-    // 특정 고객 ID로 Phase 리스트를 조회하는 메서드
     public List<Phase> getPhasesByCustomerId(Integer customerId) {
         return phaseRepository.findByCustomerId(customerId);
     }

@@ -34,10 +34,9 @@ public class RefundService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    // 기존 환불 레코드 생성 로직
     public void createRefundRecord(Customer customer, Map<String, Object> cancelInfo) {
         if (refundRepository.existsByCustomerId(customer.getId())) {
-            return; // 이미 기록이 있으면 추가하지 않음
+            return;
         }
         CancelledCustomerRefund refund = new CancelledCustomerRefund();
         refund.setCustomerId(customer.getId());
@@ -90,7 +89,7 @@ public class RefundService {
     }
 
     public SseEmitter uploadRefundExcelFileWithProgress(MultipartFile file, SseEmitter emitter) {
-        SseEmitter sseEmitter = new SseEmitter(3000000L); // 최대 3000초 타임아웃
+        SseEmitter sseEmitter = new SseEmitter(3000000L);
         CompletableFuture.runAsync(() -> {
             try {
                 processRefundExcelFile(file, sseEmitter);
@@ -100,7 +99,6 @@ public class RefundService {
                 try {
                     sseEmitter.send(SseEmitter.event().name("error").data(e.getMessage()));
                 } catch (Exception ex) {
-                    // 추가 로깅 처리 가능
                 }
                 sseEmitter.completeWithError(e);
             }
@@ -108,7 +106,6 @@ public class RefundService {
         return sseEmitter;
     }
 
-    // 셀의 실제 날짜값을 가져오는 헬퍼 메서드
     private LocalDate getDateFromCell(Cell cell, DataFormatter formatter, DateTimeFormatter dtf) {
         if (cell == null) return null;
         if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
@@ -124,7 +121,6 @@ public class RefundService {
         return null;
     }
 
-    // 셀의 원시값을 가져오는 헬퍼 메서드 (XSSFCell인 경우)
     private String getRawCellValue(Cell cell, DataFormatter formatter) {
         if (cell == null) return "";
         if (cell instanceof XSSFCell) {
@@ -136,17 +132,15 @@ public class RefundService {
         return formatter.formatCellValue(cell);
     }
 
-    // 환불 엑셀 파일의 내용을 처리하는 메서드 (업로드 시 사용)
     private void processRefundExcelFile(MultipartFile file, SseEmitter emitter) throws Exception {
         DataFormatter formatter = new DataFormatter(Locale.getDefault());
-        // 날짜 형식: "yyyy-MM-dd"
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
 
         try (InputStream is = file.getInputStream();
              Workbook workbook = new XSSFWorkbook(is)) {
 
             Sheet sheet = workbook.getSheetAt(0);
-            int startRow = 2; // 3행부터 데이터 추출 (0-indexed 2)
+            int startRow = 2;
             int lastRow = sheet.getLastRowNum();
             int totalRows = lastRow - startRow + 1;
             int processed = 0;
@@ -161,7 +155,6 @@ public class RefundService {
                 String name = formatter.formatCellValue(row.getCell(0));
                 refund.setName(name);
 
-                // customer_id를 이름으로 검색
                 if (name != null && !name.trim().isEmpty()) {
                     List<Customer> matchingCustomers = customerRepository.findByCustomerDataNameContaining(name);
                     if (matchingCustomers != null && !matchingCustomers.isEmpty()) {
@@ -255,19 +248,16 @@ public class RefundService {
         }
     }
 
-    // 모든 환불 레코드를 반환하는 메서드
     public List<CancelledCustomerRefund> getAllRefundRecords() {
         return refundRepository.findAll();
     }
 
-    // fillRefformat: refformat.xlsx 템플릿에 환불 데이터를 기록하는 메서드
-    // src/main/java/com/audora/lotting_be/service/RefundService.java
+
     public void fillRefformat(File tempFile, List<CancelledCustomerRefund> refunds, SseEmitter emitter) throws Exception {
         try (FileInputStream fis = new FileInputStream(tempFile);
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
-            // 템플릿에서 헤더는 1행(0번행)이고, 데이터는 3행(0-indexed 2)부터 기록
             int startRow = 2;
             int currentRow = startRow;
             int total = refunds.size();
@@ -277,7 +267,6 @@ public class RefundService {
                 if (row == null) {
                     row = sheet.createRow(currentRow);
                 }
-                // 기존 템플릿 셀 스타일 유지를 위해 MissingCellPolicy를 사용하여 셀 가져오기
                 Cell cellA = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 cellA.setCellValue(refund.getName() != null ? refund.getName() : "");
 

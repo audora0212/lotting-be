@@ -73,7 +73,6 @@ public class DepositExcelService {
 //                        }
 //                    }
 
-// 거래일시 처리 (셀 인덱스 1)
                     Cell cellB = row.getCell(1);
                     LocalDateTime transactionDateTime = null;
                     if (cellB != null) {
@@ -83,7 +82,7 @@ public class DepositExcelService {
                             String[] patterns = {
                                     "yyyy.MM.dd HH:mm:ss",
                                     "yyyy-MM-dd HH:mm:ss",
-                                    "yyyy.MM.dd"  // 시간 정보 없음
+                                    "yyyy.MM.dd"
                             };
                             for (String pattern : patterns) {
                                 try {
@@ -94,7 +93,7 @@ public class DepositExcelService {
                                     } else {
                                         transactionDateTime = LocalDateTime.parse(cleaned, dtf2);
                                     }
-                                    break; // 성공하면 루프 탈출
+                                    break;
                                 } catch (Exception ex) {
                                     logger.warn("행 {}: 거래일시 '{}' 파싱 실패 with pattern {}: {}", i, cleaned, pattern, ex.getMessage());
                                 }
@@ -186,27 +185,22 @@ public class DepositExcelService {
                     String loanRecord = formatter.formatCellValue(row.getCell(22)).trim();
 
 
-                    // selfRecord 또는 loanRecord 값이 있다면 대출/자납 기록으로 처리
                     if (!selfRecord.isEmpty() || !loanRecord.isEmpty()) {
                         dh.setLoanStatus("o");
 
-                        // 만약 loanRecord 값이 있다면 우선 loanammount에 depositAmt 저장
                         if (!loanRecord.isEmpty()) {
                             dh.setLoanRecord(loanRecord);
-                            // loan_details 객체가 없으면 새로 생성
                             if (dh.getLoanDetails() == null) {
                                 dh.setLoanDetails(new Loan());
                             }
                             dh.getLoanDetails().setLoanammount(depositAmt);
                         } else if (!selfRecord.isEmpty()) {
-                            // loanRecord가 없고 selfRecord만 있으면 selfammount에 depositAmt 저장
                             dh.setSelfRecord(selfRecord);
                             if (dh.getLoanDetails() == null) {
                                 dh.setLoanDetails(new Loan());
                             }
                             dh.getLoanDetails().setSelfammount(depositAmt);
                         }
-                        // loanStatus가 "o"인 경우 loanselfsum에는 depositAmt를 저장
                         if (dh.getLoanDetails() == null) {
                             dh.setLoanDetails(new Loan());
                         }
@@ -252,7 +246,6 @@ public class DepositExcelService {
                         }
                         dh.setTargetPhases(targetPhases);
                     }
-// 기존에 다른 셀들을 읽은 후, depositPhase1 셀을 추가로 읽습니다.
                     Cell depositPhase1Cell = row.getCell(11);
                     if (depositPhase1Cell != null) {
                         String depositPhase1Value = formatter.formatCellValue(depositPhase1Cell).trim();
@@ -261,16 +254,13 @@ public class DepositExcelService {
                     } else {
                         logger.info("Row {} depositPhase1 셀이 비어 있습니다.", i);
                     }
-                    // 저장 및 재계산 호출
                     depositHistoryService.createDepositHistory(dh);
                     logger.info("행 {} 처리 완료.", i);
 
                 } catch (Exception e) {
                     logger.error("행 {} 처리 중 예외 발생: {}", i, e.getMessage());
-                    // 문제 발생한 행은 건너뛰고 계속 진행
                 }
 
-                // 10건마다 또는 마지막 행에서 진행률 전송
                 if ((i - startRow + 1) % 10 == 0 || i == lastRow) {
                     try {
                         String progressMsg = (i - startRow + 1) + "/" + totalRows;
@@ -297,7 +287,6 @@ public class DepositExcelService {
 
     @Transactional
     public void fillDepFormat(File tempFile, List<DepositHistory> depositHistories) throws IOException {
-        // 데이터 포매터 및 날짜 포맷터 준비
         DataFormatter formatter = new DataFormatter(Locale.getDefault());
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
@@ -305,7 +294,7 @@ public class DepositExcelService {
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
 
             XSSFSheet sheet = workbook.getSheetAt(0);
-            int startRow = 1; // 0번 행은 헤더
+            int startRow = 1;
 
             for (int i = 0; i < depositHistories.size(); i++) {
                 DepositHistory dh = depositHistories.get(i);
@@ -378,80 +367,74 @@ public class DepositExcelService {
 
                 col++;
 
-                // Column 10: depositPhase1
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase1() != null ? dh.getDepositPhase1() : "");
                 col++;
 
 
-                // Column 11: depositPhase2
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase2() != null ? dh.getDepositPhase2() : "");
                 col++;
 
-                // Column 12: depositPhase3
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase3() != null ? dh.getDepositPhase3() : "");
                 col++;
 
-                // Column 13: depositPhase4
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase4() != null ? dh.getDepositPhase4() : "");
                 col++;
 
-                // Column 14: depositPhase5
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase5() != null ? dh.getDepositPhase5() : "");
                 col++;
 
-                // Column 15: depositPhase6
+
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase6() != null ? dh.getDepositPhase6() : "");
                 col++;
 
-                // Column 16: depositPhase7
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase7() != null ? dh.getDepositPhase7() : "");
                 col++;
 
-                // Column 17: depositPhase8
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase8() != null ? dh.getDepositPhase8() : "");
                 col++;
 
-                // Column 18: depositPhase9
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase9() != null ? dh.getDepositPhase9() : "");
                 col++;
 
-                // Column 19: depositPhase10
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getDepositPhase10() != null ? dh.getDepositPhase10() : "");
                 col++;
 
-                // Column 20: selfRec
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getSelfRecord() != null ? dh.getSelfRecord() : "");
                 col++;
 
-                // Column 21: loanRecord
                 cell = row.getCell(col);
                 if (cell == null) { cell = row.createCell(col); }
                 cell.setCellValue(dh.getLoanRecord() != null ? dh.getLoanRecord() : "");
                 col++;
 
-            } // for end
+            }
 
             workbook.setForceFormulaRecalculation(true);
             try (FileOutputStream fos = new FileOutputStream(tempFile)) {

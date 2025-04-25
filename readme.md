@@ -1,5 +1,6 @@
 # Lotting Backend 애플리케이션
 
+### 해당 프로젝트는 '도심역 민간임대주택 창립준비위원회' 전산화 과정의 '외주 프로젝트' 입니다.
 Spring Boot 기반의 Lotting Backend 애플리케이션은 고객 등록, 입금내역 관리, 단계별 납입 처리, 수수료 및 환불 관리 등 다양한 행정 업무를 지원하는 백엔드 솔루션입니다.
 
 ---
@@ -100,10 +101,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	implementation 'com.google.guava:guava:31.1-jre'
-	// JWT 라이브러리
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 파서를 Jackson으로 설정
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
